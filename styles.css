@@ -6,25 +6,25 @@
 }
 
 :root {
-    --primary: #4f46e5;
-    --primary-dark: #4338ca;
-    --secondary: #64748b;
+    --primary: #18181b;
+    --primary-dark: #09090b;
+    --secondary: #71717a;
     --success: #10b981;
     --danger: #ef4444;
-    --background: #f8fafc;
+    --background: #f4f4f5;
     --surface: #ffffff;
-    --border: #e2e8f0;
-    --text: #0f172a;
-    --text-muted: #64748b;
-    --shadow: rgba(0, 0, 0, 0.1);
-    --shadow-lg: rgba(0, 0, 0, 0.15);
-    --radius: 12px;
-    --radius-sm: 8px;
+    --border: #e4e4e7;
+    --text: #09090b;
+    --text-muted: #71717a;
+    --shadow: rgba(0, 0, 0, 0.04);
+    --shadow-lg: rgba(0, 0, 0, 0.08);
+    --radius: 8px;
+    --radius-sm: 6px;
 }
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--background);
     min-height: 100vh;
     color: var(--text);
     line-height: 1.6;
@@ -40,19 +40,19 @@ body {
 header {
     text-align: center;
     margin-bottom: 3rem;
-    color: white;
+    color: var(--text);
 }
 
 header h1 {
     font-size: 2.5rem;
     font-weight: 700;
     margin-bottom: 0.5rem;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    letter-spacing: -0.02em;
 }
 
 .subtitle {
     font-size: 1.125rem;
-    opacity: 0.95;
+    color: var(--text-muted);
 }
 
 /* Controls */
@@ -65,7 +65,7 @@ header h1 {
     background: var(--surface);
     padding: 1.25rem;
     border-radius: var(--radius);
-    box-shadow: 0 4px 6px var(--shadow);
+    border: 1px solid var(--border);
 }
 
 .filter-group {
@@ -102,19 +102,16 @@ header h1 {
 
 .btn-primary:hover {
     background: var(--primary-dark);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px var(--shadow-lg);
 }
 
 .btn-secondary {
     background: var(--surface);
     color: var(--text);
-    border: 2px solid var(--border);
+    border: 1px solid var(--border);
 }
 
 .btn-secondary:hover {
     background: var(--background);
-    border-color: var(--secondary);
 }
 
 .btn-outline {
@@ -140,7 +137,7 @@ header h1 {
 /* Select */
 .select {
     padding: 0.625rem 1rem;
-    border: 2px solid var(--border);
+    border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     font-size: 0.9375rem;
     background: var(--surface);
@@ -158,7 +155,7 @@ main {
     background: var(--surface);
     padding: 2rem;
     border-radius: var(--radius);
-    box-shadow: 0 4px 6px var(--shadow);
+    border: 1px solid var(--border);
     min-height: 400px;
 }
 
@@ -197,17 +194,16 @@ main {
 
 .screenshot-card {
     background: var(--surface);
-    border: 2px solid var(--border);
+    border: 1px solid var(--border);
     border-radius: var(--radius);
     overflow: hidden;
-    transition: all 0.3s;
+    transition: all 0.2s;
     cursor: pointer;
 }
 
 .screenshot-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 16px var(--shadow-lg);
-    border-color: var(--primary);
+    border-color: var(--text-muted);
+    box-shadow: 0 2px 8px var(--shadow-lg);
 }
 
 .screenshot-card img {
@@ -232,26 +228,26 @@ main {
 .category-badge {
     display: inline-block;
     padding: 0.25rem 0.75rem;
-    border-radius: 9999px;
+    border-radius: var(--radius-sm);
     font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.025em;
+    letter-spacing: 0.05em;
+    background: var(--background);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
 }
 
 .category-social-media {
-    background: #dbeafe;
-    color: #1e40af;
+    /* Using default gray styling */
 }
 
 .category-website {
-    background: #dcfce7;
-    color: #166534;
+    /* Using default gray styling */
 }
 
 .category-seo {
-    background: #fef3c7;
-    color: #92400e;
+    /* Using default gray styling */
 }
 
 .card-actions {
@@ -345,7 +341,7 @@ main {
 
 /* Drop Zone */
 .drop-zone {
-    border: 3px dashed var(--border);
+    border: 2px dashed var(--border);
     border-radius: var(--radius);
     padding: 3rem 2rem;
     text-align: center;
@@ -355,8 +351,8 @@ main {
 
 .drop-zone:hover,
 .drop-zone.drag-over {
-    border-color: var(--primary);
-    background: #f0f4ff;
+    border-color: var(--text-muted);
+    background: var(--background);
 }
 
 .drop-zone svg {
@@ -388,11 +384,20 @@ main {
     background: var(--background);
 }
 
-.preview-container img {
+.preview-container img,
+.preview-container canvas {
     width: 100%;
     display: block;
     max-height: 300px;
     object-fit: contain;
+}
+
+.screenshot-card canvas {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    display: block;
+    background: var(--background);
 }
 
 .form-group {
@@ -410,7 +415,7 @@ main {
 .textarea {
     width: 100%;
     padding: 0.75rem;
-    border: 2px solid var(--border);
+    border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     font-size: 0.9375rem;
     font-family: inherit;

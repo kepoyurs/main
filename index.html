@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Client Performance Dashboard</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -41,17 +42,18 @@
                     <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
                     </svg>
-                    <p>Drag & drop your screenshot here</p>
+                    <p>Drag & drop your screenshot or PDF here</p>
                     <p class="or">or</p>
                     <button type="button" class="btn btn-outline" onclick="document.getElementById('fileInput').click()">
                         Browse Files
                     </button>
-                    <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                    <input type="file" id="fileInput" accept="image/*,application/pdf" style="display: none;">
                 </div>
 
                 <div id="uploadForm" class="upload-form" style="display: none;">
-                    <div class="preview-container">
-                        <img id="imagePreview" src="" alt="Preview">
+                    <div class="preview-container" id="previewContainer">
+                        <img id="imagePreview" src="" alt="Preview" style="display: none;">
+                        <canvas id="pdfPreview" style="display: none; max-width: 100%;"></canvas>
                     </div>
 
                     <div class="form-group">

@@ -4,10 +4,16 @@ class PerformanceDashboard {
         this.screenshots = [];
         this.currentFilter = 'all';
         this.currentFile = null;
+        this.currentFileType = null;
         this.init();
     }
 
     init() {
+        // Configure PDF.js
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+
         this.loadFromStorage();
         this.setupEventListeners();
         this.render();
@@ -76,7 +82,10 @@ class PerformanceDashboard {
         document.getElementById('screenshotCategory').value = '';
         document.getElementById('screenshotTitle').value = '';
         document.getElementById('screenshotDescription').value = '';
+        document.getElementById('imagePreview').style.display = 'none';
+        document.getElementById('pdfPreview').style.display = 'none';
         this.currentFile = null;
+        this.currentFileType = null;
     }
 
     handleDragOver(e) {
@@ -98,48 +107,114 @@ class PerformanceDashboard {
         dropZone.classList.remove('drag-over');
 
         const files = e.dataTransfer.files;
-        if (files.length > 0 && files[0].type.startsWith('image/')) {
-            this.processFile(files[0]);
-        } else {
-            alert('Please upload an image file');
+        if (files.length > 0) {
+            const file = files[0];
+            if (file.type.startsWith('image/') || file.type === 'application/pdf') {
+                this.processFile(file);
+            } else {
+                alert('Please upload an image or PDF file');
+            }
         }
     }
 
     handleFileSelect(e) {
         const file = e.target.files[0];
-        if (file && file.type.startsWith('image/')) {
-            this.processFile(file);
-        } else {
-            alert('Please select an image file');
+        if (file) {
+            if (file.type.startsWith('image/') || file.type === 'application/pdf') {
+                this.processFile(file);
+            } else {
+                alert('Please select an image or PDF file');
+            }
         }
     }
 
-    processFile(file) {
+    async processFile(file) {
         this.currentFile = file;
+        this.currentFileType = file.type;
+
+        if (file.type === 'application/pdf') {
+            await this.processPDF(file);
+        } else {
+            this.processImage(file);
+        }
+
+        document.getElementById('dropZone').style.display = 'none';
+        document.getElementById('uploadForm').style.display = 'block';
+    }
+
+    processImage(file) {
         const reader = new FileReader();
 
         reader.onload = (e) => {
-            document.getElementById('imagePreview').src = e.target.result;
-            document.getElementById('dropZone').style.display = 'none';
-            document.getElementById('uploadForm').style.display = 'block';
+            const imgPreview = document.getElementById('imagePreview');
+            const pdfPreview = document.getElementById('pdfPreview');
+
+            imgPreview.src = e.target.result;
+            imgPreview.style.display = 'block';
+            pdfPreview.style.display = 'none';
         };
 
         reader.readAsDataURL(file);
+    }
+
+    async processPDF(file) {
+        const reader = new FileReader();
+
+        reader.onload = async (e) => {
+            const typedarray = new Uint8Array(e.target.result);
+
+            try {
+                const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                const page = await pdf.getPage(1);
+
+                const canvas = document.getElementById('pdfPreview');
+                const context = canvas.getContext('2d');
+
+                const viewport = page.getViewport({ scale: 1.5 });
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                await page.render({
+                    canvasContext: context,
+                    viewport: viewport
+                }).promise;
+
+                const imgPreview = document.getElementById('imagePreview');
+                imgPreview.style.display = 'none';
+                canvas.style.display = 'block';
+            } catch (error) {
+                console.error('Error rendering PDF:', error);
+                alert('Error loading PDF file');
+            }
+        };
+
+        reader.readAsArrayBuffer(file);
     }
 
     saveScreenshot() {
         const category = document.getElementById('screenshotCategory').value;
         const title = document.getElementById('screenshotTitle').value;
         const description = document.getElementById('screenshotDescription').value;
-        const imageData = document.getElementById('imagePreview').src;
 
         if (!category) {
             alert('Please select a category');
             return;
         }
 
-        if (!imageData) {
-            alert('Please upload an image');
+        let fileData;
+        let fileType;
+
+        if (this.currentFileType === 'application/pdf') {
+            const canvas = document.getElementById('pdfPreview');
+            fileData = canvas.toDataURL('image/png');
+            fileType = 'pdf';
+        } else {
+            fileData = document.getElementById('imagePreview').src;
+            fileType = 'image';
+        }
+
+        if (!fileData) {
+            alert('Please upload a file');
             return;
         }
 
@@ -148,7 +223,8 @@ class PerformanceDashboard {
             category,
             title: title || this.getDefaultTitle(category),
             description,
-            imageData,
+            fileData,
+            fileType,
             createdAt: new Date().toISOString()
         };
 
@@ -231,7 +307,7 @@ class PerformanceDashboard {
 
     viewFullImage(screenshot) {
         const img = new Image();
-        img.src = screenshot.imageData;
+        img.src = screenshot.fileData || screenshot.imageData; // Support old data format
 
         const viewer = document.createElement('div');
         viewer.style.cssText = `
@@ -277,13 +353,16 @@ class PerformanceDashboard {
             'seo': 'SEO'
         };
 
+        const fileData = screenshot.fileData || screenshot.imageData; // Support old format
+        const fileTypeLabel = screenshot.fileType === 'pdf' ? ' (PDF)' : '';
+
         return `
             <div class="screenshot-card" id="card-${screenshot.id}">
-                <img src="${screenshot.imageData}" alt="${screenshot.title}">
+                <img src="${fileData}" alt="${screenshot.title}">
                 <div class="card-content">
                     <div class="card-header">
                         <span class="category-badge category-${screenshot.category}">
-                            ${categoryLabels[screenshot.category]}
+                            ${categoryLabels[screenshot.category]}${fileTypeLabel}
                         </span>
                         <div class="card-actions">
                             <button class="icon-btn" id="delete-${screenshot.id}" title="Delete">
