@@ -6,6 +6,7 @@
     <title>Client Performance Dashboard</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -19,7 +20,14 @@
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 5v14M5 12h14"/>
                 </svg>
-                Add Screenshot
+                Upload Reports
+            </button>
+            <button id="settingsBtn" class="btn btn-secondary">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M12 1v6m0 6v6M1 12h6m6 0h6"/>
+                </svg>
+                Settings
             </button>
             <div class="filter-group">
                 <label for="categoryFilter">Filter:</label>
@@ -42,12 +50,13 @@
                     <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
                     </svg>
-                    <p>Drag & drop your screenshot or PDF here</p>
+                    <p>Drag & drop your screenshots or PDFs here</p>
+                    <p class="hint">You can upload multiple files at once</p>
                     <p class="or">or</p>
                     <button type="button" class="btn btn-outline" onclick="document.getElementById('fileInput').click()">
                         Browse Files
                     </button>
-                    <input type="file" id="fileInput" accept="image/*,application/pdf" style="display: none;">
+                    <input type="file" id="fileInput" accept="image/*,application/pdf" multiple style="display: none;">
                 </div>
 
                 <div id="uploadForm" class="upload-form" style="display: none;">
@@ -84,6 +93,34 @@
             </div>
         </div>
 
+        <div id="settingsModal" class="modal">
+            <div class="modal-content">
+                <span class="close-settings">&times;</span>
+                <h2>Settings</h2>
+
+                <div class="settings-section">
+                    <h3>Claude API Configuration</h3>
+                    <p class="settings-description">
+                        To automatically extract metrics from your screenshots, provide your Claude API key.
+                        Your key is stored locally and never sent anywhere except to Anthropic's API.
+                    </p>
+
+                    <div class="form-group">
+                        <label for="apiKey">Claude API Key</label>
+                        <input type="password" id="apiKey" class="input" placeholder="sk-ant-...">
+                        <p class="hint">Get your API key from <a href="https://console.anthropic.com/" target="_blank">console.anthropic.com</a></p>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" id="saveSettings" class="btn btn-primary">Save Settings</button>
+                        <button type="button" id="testApiKey" class="btn btn-secondary">Test Connection</button>
+                    </div>
+
+                    <div id="apiStatus" class="api-status" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+
         <main id="dashboardContent">
             <div id="emptyState" class="empty-state">
                 <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -91,10 +128,10 @@
                     <circle cx="8.5" cy="8.5" r="1.5"/>
                     <path d="M21 15l-5-5L5 21"/>
                 </svg>
-                <h2>No screenshots yet</h2>
-                <p>Upload your first performance screenshot to get started</p>
+                <h2>No data yet</h2>
+                <p>Upload performance reports to extract and visualize metrics</p>
                 <button class="btn btn-primary" onclick="document.getElementById('addScreenshotBtn').click()">
-                    Add Your First Screenshot
+                    Upload Your First Report
                 </button>
             </div>
 

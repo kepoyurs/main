@@ -1,10 +1,10 @@
-// Dashboard Application
+// Performance Dashboard with AI-Powered Metric Extraction
 class PerformanceDashboard {
     constructor() {
-        this.screenshots = [];
+        this.metrics = [];
+        this.charts = {};
         this.currentFilter = 'all';
-        this.currentFile = null;
-        this.currentFileType = null;
+        this.apiKey = null;
         this.init();
     }
 
@@ -14,26 +14,38 @@ class PerformanceDashboard {
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         }
 
-        this.loadFromStorage();
+        this.loadApiKey();
+        this.loadMetrics();
         this.setupEventListeners();
         this.render();
     }
 
     setupEventListeners() {
-        // Modal controls
-        const modal = document.getElementById('uploadModal');
+        // Upload modal
+        const uploadModal = document.getElementById('uploadModal');
         const addBtn = document.getElementById('addScreenshotBtn');
-        const closeBtn = document.querySelector('.close');
-        const cancelBtn = document.getElementById('cancelUpload');
+        const closeBtn = uploadModal.querySelector('.close');
 
-        addBtn.addEventListener('click', () => this.openModal());
-        closeBtn.addEventListener('click', () => this.closeModal());
-        cancelBtn.addEventListener('click', () => this.closeModal());
-
-        // Click outside modal to close
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) this.closeModal();
+        addBtn.addEventListener('click', () => this.openUploadModal());
+        closeBtn.addEventListener('click', () => this.closeUploadModal());
+        uploadModal.addEventListener('click', (e) => {
+            if (e.target === uploadModal) this.closeUploadModal();
         });
+
+        // Settings modal
+        const settingsModal = document.getElementById('settingsModal');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const closeSettingsBtn = settingsModal.querySelector('.close-settings');
+
+        settingsBtn.addEventListener('click', () => this.openSettingsModal());
+        closeSettingsBtn.addEventListener('click', () => this.closeSettingsModal());
+        settingsModal.addEventListener('click', (e) => {
+            if (e.target === settingsModal) this.closeSettingsModal();
+        });
+
+        // Settings actions
+        document.getElementById('saveSettings').addEventListener('click', () => this.saveSettings());
+        document.getElementById('testApiKey').addEventListener('click', () => this.testApiKey());
 
         // File input
         const fileInput = document.getElementById('fileInput');
@@ -46,48 +58,96 @@ class PerformanceDashboard {
         dropZone.addEventListener('dragleave', (e) => this.handleDragLeave(e));
         dropZone.addEventListener('drop', (e) => this.handleDrop(e));
 
-        // Save screenshot
-        const saveBtn = document.getElementById('saveScreenshot');
-        saveBtn.addEventListener('click', () => this.saveScreenshot());
-
         // Filter
         const filterSelect = document.getElementById('categoryFilter');
-        filterSelect.addEventListener('change', (e) => this.filterScreenshots(e.target.value));
+        filterSelect.addEventListener('change', (e) => this.filterMetrics(e.target.value));
 
         // Clear all
-        const clearAllBtn = document.getElementById('clearAllBtn');
-        clearAllBtn.addEventListener('click', () => this.clearAll());
+        document.getElementById('clearAllBtn').addEventListener('click', () => this.clearAll());
 
-        // Prevent default drag behavior on document
+        // Prevent default drag behavior
         document.addEventListener('dragover', (e) => e.preventDefault());
         document.addEventListener('drop', (e) => e.preventDefault());
     }
 
-    openModal() {
-        const modal = document.getElementById('uploadModal');
+    // Modal Management
+    openUploadModal() {
+        document.getElementById('uploadModal').classList.add('active');
+    }
+
+    closeUploadModal() {
+        document.getElementById('uploadModal').classList.remove('active');
+    }
+
+    openSettingsModal() {
+        const modal = document.getElementById('settingsModal');
+        document.getElementById('apiKey').value = this.apiKey || '';
         modal.classList.add('active');
-        this.resetUploadForm();
     }
 
-    closeModal() {
-        const modal = document.getElementById('uploadModal');
-        modal.classList.remove('active');
-        this.resetUploadForm();
+    closeSettingsModal() {
+        document.getElementById('settingsModal').classList.remove('active');
     }
 
-    resetUploadForm() {
-        document.getElementById('dropZone').style.display = 'block';
-        document.getElementById('uploadForm').style.display = 'none';
-        document.getElementById('fileInput').value = '';
-        document.getElementById('screenshotCategory').value = '';
-        document.getElementById('screenshotTitle').value = '';
-        document.getElementById('screenshotDescription').value = '';
-        document.getElementById('imagePreview').style.display = 'none';
-        document.getElementById('pdfPreview').style.display = 'none';
-        this.currentFile = null;
-        this.currentFileType = null;
+    // API Key Management
+    loadApiKey() {
+        this.apiKey = localStorage.getItem('claude-api-key');
     }
 
+    saveSettings() {
+        const apiKey = document.getElementById('apiKey').value.trim();
+        if (apiKey) {
+            this.apiKey = apiKey;
+            localStorage.setItem('claude-api-key', apiKey);
+            this.showApiStatus('Settings saved successfully', 'success');
+        } else {
+            this.showApiStatus('Please enter an API key', 'error');
+        }
+    }
+
+    async testApiKey() {
+        const apiKey = document.getElementById('apiKey').value.trim();
+        if (!apiKey) {
+            this.showApiStatus('Please enter an API key first', 'error');
+            return;
+        }
+
+        this.showApiStatus('Testing connection...', 'info');
+
+        try {
+            const response = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': apiKey,
+                    'anthropic-version': '2023-06-01'
+                },
+                body: JSON.stringify({
+                    model: 'claude-3-5-sonnet-20241022',
+                    max_tokens: 10,
+                    messages: [{ role: 'user', content: 'test' }]
+                })
+            });
+
+            if (response.ok) {
+                this.showApiStatus('✓ Connection successful!', 'success');
+            } else {
+                const error = await response.json();
+                this.showApiStatus(`✗ Error: ${error.error?.message || 'Invalid API key'}`, 'error');
+            }
+        } catch (error) {
+            this.showApiStatus(`✗ Connection failed: ${error.message}`, 'error');
+        }
+    }
+
+    showApiStatus(message, type) {
+        const statusDiv = document.getElementById('apiStatus');
+        statusDiv.textContent = message;
+        statusDiv.className = `api-status ${type}`;
+        statusDiv.style.display = 'block';
+    }
+
+    // File Handling
     handleDragOver(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -106,302 +166,315 @@ class PerformanceDashboard {
         const dropZone = document.getElementById('dropZone');
         dropZone.classList.remove('drag-over');
 
-        const files = e.dataTransfer.files;
+        const files = Array.from(e.dataTransfer.files).filter(file =>
+            file.type.startsWith('image/') || file.type === 'application/pdf'
+        );
+
         if (files.length > 0) {
-            const file = files[0];
-            if (file.type.startsWith('image/') || file.type === 'application/pdf') {
-                this.processFile(file);
-            } else {
-                alert('Please upload an image or PDF file');
-            }
+            this.processFiles(files);
+        } else {
+            alert('Please upload image or PDF files');
         }
     }
 
     handleFileSelect(e) {
-        const file = e.target.files[0];
-        if (file) {
-            if (file.type.startsWith('image/') || file.type === 'application/pdf') {
-                this.processFile(file);
-            } else {
-                alert('Please select an image or PDF file');
+        const files = Array.from(e.target.files).filter(file =>
+            file.type.startsWith('image/') || file.type === 'application/pdf'
+        );
+
+        if (files.length > 0) {
+            this.processFiles(files);
+        }
+    }
+
+    async processFiles(files) {
+        if (!this.apiKey) {
+            alert('Please configure your Claude API key in Settings first');
+            this.openSettingsModal();
+            return;
+        }
+
+        this.closeUploadModal();
+        this.showLoading(`Analyzing ${files.length} file(s)...`);
+
+        for (let i = 0; i < files.length; i++) {
+            this.updateLoadingText(`Processing file ${i + 1} of ${files.length}...`);
+            try {
+                await this.processFile(files[i]);
+            } catch (error) {
+                console.error(`Error processing file ${i + 1}:`, error);
             }
         }
+
+        this.hideLoading();
+        this.saveMetrics();
+        this.render();
     }
 
     async processFile(file) {
-        this.currentFile = file;
-        this.currentFileType = file.type;
+        // Convert file to base64
+        const base64 = await this.fileToBase64(file);
 
-        if (file.type === 'application/pdf') {
-            await this.processPDF(file);
-        } else {
-            this.processImage(file);
+        // Extract image data (remove data:image/...;base64, prefix)
+        const imageData = base64.split(',')[1];
+
+        // Determine media type
+        let mediaType = 'image/jpeg';
+        if (file.type === 'image/png') mediaType = 'image/png';
+        else if (file.type === 'image/gif') mediaType = 'image/gif';
+        else if (file.type === 'image/webp') mediaType = 'image/webp';
+
+        // Call Claude API for vision analysis
+        const metrics = await this.extractMetricsFromImage(imageData, mediaType, file.name);
+
+        if (metrics && metrics.length > 0) {
+            metrics.forEach(metric => {
+                metric.id = Date.now() + Math.random();
+                metric.uploadedAt = new Date().toISOString();
+                metric.sourceFile = file.name;
+                this.metrics.push(metric);
+            });
         }
-
-        document.getElementById('dropZone').style.display = 'none';
-        document.getElementById('uploadForm').style.display = 'block';
     }
 
-    processImage(file) {
-        const reader = new FileReader();
+    async extractMetricsFromImage(imageData, mediaType, filename) {
+        try {
+            const response = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': this.apiKey,
+                    'anthropic-version': '2023-06-01'
+                },
+                body: JSON.stringify({
+                    model: 'claude-3-5-sonnet-20241022',
+                    max_tokens: 2000,
+                    messages: [{
+                        role: 'user',
+                        content: [
+                            {
+                                type: 'image',
+                                source: {
+                                    type: 'base64',
+                                    media_type: mediaType,
+                                    data: imageData
+                                }
+                            },
+                            {
+                                type: 'text',
+                                text: `Analyze this performance metrics screenshot and extract all numerical data. Return a JSON array of metrics in this exact format:
 
-        reader.onload = (e) => {
-            const imgPreview = document.getElementById('imagePreview');
-            const pdfPreview = document.getElementById('pdfPreview');
+[
+  {
+    "category": "social-media" | "website" | "seo",
+    "label": "Metric name",
+    "value": "Formatted value with units",
+    "numericValue": numeric value only,
+    "change": "% change" or null,
+    "changeDirection": "up" | "down" | "neutral" or null,
+    "period": "time period" or null,
+    "platform": "platform name" or null
+  }
+]
 
-            imgPreview.src = e.target.result;
-            imgPreview.style.display = 'block';
-            pdfPreview.style.display = 'none';
-        };
+Examples:
+- Followers: {"category": "social-media", "label": "Followers", "value": "125.5K", "numericValue": 125500, "change": "+12.5%", "changeDirection": "up", "period": "Last 30 days", "platform": "Instagram"}
+- Page Views: {"category": "website", "label": "Page Views", "value": "45,230", "numericValue": 45230, "change": null, "changeDirection": null, "period": "Last month", "platform": null}
 
-        reader.readAsDataURL(file);
-    }
+Extract ALL visible metrics. Be thorough.`
+                            }
+                        ]
+                    }]
+                })
+            });
 
-    async processPDF(file) {
-        const reader = new FileReader();
-
-        reader.onload = async (e) => {
-            const typedarray = new Uint8Array(e.target.result);
-
-            try {
-                const pdf = await pdfjsLib.getDocument(typedarray).promise;
-                const page = await pdf.getPage(1);
-
-                const canvas = document.getElementById('pdfPreview');
-                const context = canvas.getContext('2d');
-
-                const viewport = page.getViewport({ scale: 1.5 });
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
-
-                await page.render({
-                    canvasContext: context,
-                    viewport: viewport
-                }).promise;
-
-                const imgPreview = document.getElementById('imagePreview');
-                imgPreview.style.display = 'none';
-                canvas.style.display = 'block';
-            } catch (error) {
-                console.error('Error rendering PDF:', error);
-                alert('Error loading PDF file');
+            if (!response.ok) {
+                throw new Error(`API error: ${response.status}`);
             }
-        };
 
-        reader.readAsArrayBuffer(file);
-    }
+            const data = await response.json();
+            const text = data.content[0].text;
 
-    saveScreenshot() {
-        const category = document.getElementById('screenshotCategory').value;
-        const title = document.getElementById('screenshotTitle').value;
-        const description = document.getElementById('screenshotDescription').value;
+            // Extract JSON from response
+            const jsonMatch = text.match(/\[[\s\S]*\]/);
+            if (jsonMatch) {
+                return JSON.parse(jsonMatch[0]);
+            }
 
-        if (!category) {
-            alert('Please select a category');
-            return;
-        }
-
-        let fileData;
-        let fileType;
-
-        if (this.currentFileType === 'application/pdf') {
-            const canvas = document.getElementById('pdfPreview');
-            fileData = canvas.toDataURL('image/png');
-            fileType = 'pdf';
-        } else {
-            fileData = document.getElementById('imagePreview').src;
-            fileType = 'image';
-        }
-
-        if (!fileData) {
-            alert('Please upload a file');
-            return;
-        }
-
-        const screenshot = {
-            id: Date.now(),
-            category,
-            title: title || this.getDefaultTitle(category),
-            description,
-            fileData,
-            fileType,
-            createdAt: new Date().toISOString()
-        };
-
-        this.screenshots.unshift(screenshot);
-        this.saveToStorage();
-        this.render();
-        this.closeModal();
-    }
-
-    getDefaultTitle(category) {
-        const titles = {
-            'social-media': 'Social Media Performance',
-            'website': 'Website Analytics',
-            'seo': 'SEO Performance'
-        };
-        return titles[category] || 'Performance Screenshot';
-    }
-
-    deleteScreenshot(id) {
-        if (confirm('Are you sure you want to delete this screenshot?')) {
-            this.screenshots = this.screenshots.filter(s => s.id !== id);
-            this.saveToStorage();
-            this.render();
+            return [];
+        } catch (error) {
+            console.error('Error extracting metrics:', error);
+            return [];
         }
     }
 
-    filterScreenshots(category) {
+    fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // Loading Overlay
+    showLoading(text) {
+        const overlay = document.createElement('div');
+        overlay.id = 'loadingOverlay';
+        overlay.className = 'loading-overlay';
+        overlay.innerHTML = `
+            <div class="loading-content">
+                <div class="loading-spinner"></div>
+                <div class="loading-text" id="loadingText">${text}</div>
+                <div class="loading-subtext">This may take a moment...</div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+    }
+
+    updateLoadingText(text) {
+        const loadingText = document.getElementById('loadingText');
+        if (loadingText) loadingText.textContent = text;
+    }
+
+    hideLoading() {
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) overlay.remove();
+    }
+
+    // Data Management
+    saveMetrics() {
+        try {
+            localStorage.setItem('dashboard-metrics', JSON.stringify(this.metrics));
+        } catch (error) {
+            console.error('Error saving metrics:', error);
+        }
+    }
+
+    loadMetrics() {
+        try {
+            const stored = localStorage.getItem('dashboard-metrics');
+            if (stored) {
+                this.metrics = JSON.parse(stored);
+            }
+        } catch (error) {
+            console.error('Error loading metrics:', error);
+        }
+    }
+
+    filterMetrics(category) {
         this.currentFilter = category;
         this.render();
     }
 
+    getFilteredMetrics() {
+        if (this.currentFilter === 'all') {
+            return this.metrics;
+        }
+        return this.metrics.filter(m => m.category === this.currentFilter);
+    }
+
     clearAll() {
-        if (confirm('Are you sure you want to delete all screenshots? This action cannot be undone.')) {
-            this.screenshots = [];
-            this.saveToStorage();
+        if (confirm('Are you sure you want to delete all metrics? This action cannot be undone.')) {
+            this.metrics = [];
+            this.saveMetrics();
             this.render();
         }
     }
 
-    getFilteredScreenshots() {
-        if (this.currentFilter === 'all') {
-            return this.screenshots;
+    deleteMetric(id) {
+        if (confirm('Are you sure you want to delete this metric?')) {
+            this.metrics = this.metrics.filter(m => m.id !== id);
+            this.saveMetrics();
+            this.render();
         }
-        return this.screenshots.filter(s => s.category === this.currentFilter);
     }
 
+    // Rendering
     render() {
         const emptyState = document.getElementById('emptyState');
         const grid = document.getElementById('screenshotsGrid');
-        const filtered = this.getFilteredScreenshots();
+        const filtered = this.getFilteredMetrics();
 
         if (filtered.length === 0) {
             emptyState.style.display = 'flex';
             grid.style.display = 'none';
         } else {
             emptyState.style.display = 'none';
-            grid.style.display = 'grid';
-            grid.innerHTML = filtered.map(screenshot => this.createScreenshotCard(screenshot)).join('');
-
-            // Add delete event listeners
-            filtered.forEach(screenshot => {
-                const deleteBtn = document.getElementById(`delete-${screenshot.id}`);
-                if (deleteBtn) {
-                    deleteBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        this.deleteScreenshot(screenshot.id);
-                    });
-                }
-            });
-
-            // Add click to view full image
-            filtered.forEach(screenshot => {
-                const card = document.getElementById(`card-${screenshot.id}`);
-                if (card) {
-                    card.addEventListener('click', () => this.viewFullImage(screenshot));
-                }
-            });
+            grid.style.display = 'block';
+            grid.innerHTML = this.renderMetricsView(filtered);
+            this.attachMetricListeners(filtered);
+            this.renderCharts(filtered);
         }
     }
 
-    viewFullImage(screenshot) {
-        const img = new Image();
-        img.src = screenshot.fileData || screenshot.imageData; // Support old data format
-
-        const viewer = document.createElement('div');
-        viewer.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 2000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-            cursor: pointer;
-        `;
-
-        img.style.cssText = `
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            border-radius: 8px;
-        `;
-
-        viewer.appendChild(img);
-        document.body.appendChild(viewer);
-
-        viewer.addEventListener('click', () => {
-            document.body.removeChild(viewer);
-        });
-    }
-
-    createScreenshotCard(screenshot) {
-        const date = new Date(screenshot.createdAt).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
-        });
-
-        const categoryLabels = {
-            'social-media': 'Social Media',
-            'website': 'Website',
-            'seo': 'SEO'
-        };
-
-        const fileData = screenshot.fileData || screenshot.imageData; // Support old format
-        const fileTypeLabel = screenshot.fileType === 'pdf' ? ' (PDF)' : '';
+    renderMetricsView(metrics) {
+        const metricsHtml = metrics.map(metric => this.createMetricCard(metric)).join('');
 
         return `
-            <div class="screenshot-card" id="card-${screenshot.id}">
-                <img src="${fileData}" alt="${screenshot.title}">
-                <div class="card-content">
-                    <div class="card-header">
-                        <span class="category-badge category-${screenshot.category}">
-                            ${categoryLabels[screenshot.category]}${fileTypeLabel}
-                        </span>
-                        <div class="card-actions">
-                            <button class="icon-btn" id="delete-${screenshot.id}" title="Delete">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                    <h3 class="card-title">${screenshot.title}</h3>
-                    ${screenshot.description ? `<p class="card-description">${screenshot.description}</p>` : ''}
-                    <p class="card-date">Uploaded ${date}</p>
-                </div>
+            <div class="metrics-grid">
+                ${metricsHtml}
             </div>
         `;
     }
 
-    saveToStorage() {
-        try {
-            localStorage.setItem('performance-dashboard', JSON.stringify(this.screenshots));
-        } catch (e) {
-            console.error('Error saving to localStorage:', e);
-            alert('Warning: Could not save to local storage. Your data may not persist.');
-        }
+    createMetricCard(metric) {
+        const changeHtml = metric.change ? `
+            <div class="metric-change ${metric.changeDirection === 'up' ? 'positive' : metric.changeDirection === 'down' ? 'negative' : ''}">
+                ${metric.changeDirection === 'up' ? '↑' : metric.changeDirection === 'down' ? '↓' : ''} ${metric.change}
+            </div>
+        ` : '';
+
+        const platformHtml = metric.platform ? `<span class="metric-source">from ${metric.platform}</span>` : '';
+        const periodHtml = metric.period ? `<span class="metric-source">${metric.period}</span>` : '';
+
+        return `
+            <div class="metric-card">
+                <div class="metric-header">
+                    <div class="metric-label">${metric.label}</div>
+                    <button class="icon-btn" data-delete-id="${metric.id}" title="Delete">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="metric-value">${metric.value}</div>
+                ${changeHtml}
+                ${platformHtml}
+                ${periodHtml}
+            </div>
+        `;
     }
 
-    loadFromStorage() {
-        try {
-            const stored = localStorage.getItem('performance-dashboard');
-            if (stored) {
-                this.screenshots = JSON.parse(stored);
+    attachMetricListeners(metrics) {
+        metrics.forEach(metric => {
+            const deleteBtn = document.querySelector(`[data-delete-id="${metric.id}"]`);
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.deleteMetric(metric.id);
+                });
             }
-        } catch (e) {
-            console.error('Error loading from localStorage:', e);
-        }
+        });
+    }
+
+    renderCharts(metrics) {
+        // Group metrics by category for visualization
+        const categories = {
+            'social-media': metrics.filter(m => m.category === 'social-media'),
+            'website': metrics.filter(m => m.category === 'website'),
+            'seo': metrics.filter(m => m.category === 'seo')
+        };
+
+        // Clear existing charts
+        Object.values(this.charts).forEach(chart => chart.destroy());
+        this.charts = {};
+
+        // You can add chart rendering logic here if needed
     }
 }
 
-// Initialize the dashboard when DOM is ready
+// Initialize dashboard
 document.addEventListener('DOMContentLoaded', () => {
     new PerformanceDashboard();
 });
