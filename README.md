@@ -28,22 +28,46 @@ An AI-powered analytics dashboard that automatically extracts and visualizes met
 
 ## Getting Started
 
-### 1. Get a Claude API Key
+### 1. Install Dependencies
+
+First, install Node.js if you haven't already, then install the dependencies:
+
+```bash
+npm install
+```
+
+### 2. Get a Claude API Key
 
 1. Go to [console.anthropic.com](https://console.anthropic.com/)
 2. Sign up or log in
 3. Generate an API key
 4. Copy the key (starts with `sk-ant-`)
 
-### 2. Configure the Dashboard
+### 3. Start the Proxy Server
 
-1. Open `index.html` in your web browser
+The dashboard needs a local proxy server to communicate with the Claude API (to avoid CORS issues):
+
+```bash
+npm start
+```
+
+You should see:
+```
+📊 Performance Dashboard Proxy Server
+Server running on: http://localhost:3000
+```
+
+**Keep this terminal window open** while using the dashboard.
+
+### 4. Configure the Dashboard
+
+1. Open your browser and go to **http://localhost:3000**
 2. Click the "Settings" button
 3. Paste your Claude API key
 4. Click "Test Connection" to verify
 5. Click "Save Settings"
 
-### 3. Upload Performance Reports
+### 5. Upload Performance Reports
 
 1. Click "Upload Reports"
 2. Drag and drop screenshots or PDFs (or click to browse)
@@ -99,6 +123,7 @@ Works on all modern browsers:
 ## Tech Stack
 
 - **Frontend**: HTML5, CSS3, Vanilla JavaScript
+- **Backend**: Node.js + Express (local proxy server)
 - **AI**: Claude 3.5 Sonnet (vision model)
 - **Visualization**: Chart.js
 - **PDF Rendering**: PDF.js
@@ -113,15 +138,20 @@ Works on all modern browsers:
 
 ## Privacy
 
-Your data never leaves your browser except to:
-- Send images to Anthropic's Claude API for analysis
-- Receive extracted metrics back from the API
+Your data flow:
+1. Images stored locally in your browser
+2. Sent through local proxy server (runs on your machine)
+3. Forwarded to Anthropic's Claude API for analysis
+4. Metrics returned and stored locally
 
 We do NOT:
-- Store your data on any server
-- Send data to third parties
+- Store your data on any remote server
+- Send data to third parties (only to Claude API)
 - Track your usage
 - Require account creation
+- Keep logs of your data
+
+The proxy server runs locally on your machine and only forwards requests to Claude's API. Your API key and data never touch any third-party servers except Anthropic's official API.
 
 ## Cost
 
@@ -134,10 +164,16 @@ The dashboard is free to use. You only pay for Claude API usage:
 **"Please configure your Claude API key"**
 - Go to Settings and add your API key
 
-**"Connection failed"**
-- Check your API key is correct
+**"Connection failed: Failed to fetch" or "Make sure the proxy server is running"**
+- Ensure you've run `npm install` first
+- Make sure the proxy server is running (`npm start`)
+- Check that you're accessing the dashboard at `http://localhost:3000` (not file://)
+- Verify no other application is using port 3000
+
+**"Invalid API key" or authentication errors**
+- Check your API key is correct (starts with `sk-ant-`)
 - Verify you have API credits in your Anthropic account
-- Check your internet connection
+- Test the key at console.anthropic.com
 
 **Metrics not extracted**
 - Ensure screenshot text is clear and readable

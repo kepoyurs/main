@@ -115,12 +115,11 @@ class PerformanceDashboard {
         this.showApiStatus('Testing connection...', 'info');
 
         try {
-            const response = await fetch('https://api.anthropic.com/v1/messages', {
+            const response = await fetch('/api/claude', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-api-key': apiKey,
-                    'anthropic-version': '2023-06-01'
+                    'x-api-key': apiKey
                 },
                 body: JSON.stringify({
                     model: 'claude-3-5-sonnet-20241022',
@@ -136,7 +135,7 @@ class PerformanceDashboard {
                 this.showApiStatus(`✗ Error: ${error.error?.message || 'Invalid API key'}`, 'error');
             }
         } catch (error) {
-            this.showApiStatus(`✗ Connection failed: ${error.message}`, 'error');
+            this.showApiStatus(`✗ Connection failed: ${error.message}. Make sure the proxy server is running (npm start)`, 'error');
         }
     }
 
@@ -239,12 +238,11 @@ class PerformanceDashboard {
 
     async extractMetricsFromImage(imageData, mediaType, filename) {
         try {
-            const response = await fetch('https://api.anthropic.com/v1/messages', {
+            const response = await fetch('/api/claude', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-api-key': this.apiKey,
-                    'anthropic-version': '2023-06-01'
+                    'x-api-key': this.apiKey
                 },
                 body: JSON.stringify({
                     model: 'claude-3-5-sonnet-20241022',
