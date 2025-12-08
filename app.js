@@ -122,7 +122,7 @@ class PerformanceDashboard {
                     'x-api-key': apiKey
                 },
                 body: JSON.stringify({
-                    model: 'claude-3-5-sonnet-20241022',
+                    model: 'claude-3-5-sonnet-20240620',
                     max_tokens: 10,
                     messages: [{ role: 'user', content: 'test' }]
                 })
@@ -245,7 +245,7 @@ class PerformanceDashboard {
                     'x-api-key': this.apiKey
                 },
                 body: JSON.stringify({
-                    model: 'claude-3-5-sonnet-20241022',
+                    model: 'claude-3-5-sonnet-20240620',
                     max_tokens: 2000,
                     messages: [{
                         role: 'user',
