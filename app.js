@@ -20,7 +20,7 @@ class TrackerApp {
             if (raw) return JSON.parse(raw);
         } catch (_) {}
         return {
-            settings: { weightUnit: 'lbs', measureUnit: 'in', yourName: 'You', husbandName: 'Him' },
+            settings: { weightUnit: 'kg', measureUnit: 'cm', yourName: 'You', husbandName: 'Him' },
             weights: [],       // { id, date, value, note }
             measurements: [],  // { id, date, chest, waist, hips, thigh, arm, neck }
             bets: []           // { id, type, targetDate, youGuess, himGuess, actual, winner, resolved, resolvedDate }
@@ -163,8 +163,8 @@ class TrackerApp {
             `;
         } else {
             const mu = this.mu();
-            const fields = ['chest','waist','hips','thigh','arm'];
-            const labels = { chest:'Chest', waist:'Waist', hips:'Hips', thigh:'Thigh', arm:'Bicep' };
+            const fields = ['bicep','bust','waist','hips','butt','thigh','calf'];
+            const labels = { bicep:'Bicep', bust:'Bust', waist:'Waist', hips:'Hips', butt:'Butt', thigh:'Thigh', calf:'Calf' };
             const guessRows = fields.map(f => `
                 <tr>
                     <td>${labels[f]}</td>
@@ -253,12 +253,13 @@ class TrackerApp {
         const entry = {
             id:    this.uid(),
             date,
-            chest: this.numInput('measureChest'),
+            bicep: this.numInput('measureBicep'),
+            bust:  this.numInput('measureBust'),
             waist: this.numInput('measureWaist'),
             hips:  this.numInput('measureHips'),
+            butt:  this.numInput('measureButt'),
             thigh: this.numInput('measureThigh'),
-            arm:   this.numInput('measureArm'),
-            neck:  this.numInput('measureNeck'),
+            calf:  this.numInput('measureCalf'),
         };
 
         // Update or insert
@@ -299,7 +300,7 @@ class TrackerApp {
         const targetDate = document.getElementById('betMeasureDate').value;
         if (!targetDate) return;
 
-        const fields = ['chest','waist','hips','thigh','arm'];
+        const fields = ['bicep','bust','waist','hips','butt','thigh','calf'];
         const youGuess = {}, himGuess = {};
         fields.forEach(f => {
             const youEl = form.querySelector(`[name="you${f.charAt(0).toUpperCase()+f.slice(1)}"]`);
@@ -340,7 +341,7 @@ class TrackerApp {
             bet.resolved = true;
             bet.resolvedDate = this.today();
         } else {
-            const fields = ['chest','waist','hips','thigh','arm'];
+            const fields = ['bicep','bust','waist','hips','butt','thigh','calf'];
             const actual = {};
             fields.forEach(f => {
                 const el = document.getElementById(`resolveM_${f}`);
@@ -534,7 +535,7 @@ class TrackerApp {
             return;
         }
         empty.style.display = 'none';
-        this.buildMeasurementsChart('overviewMeasurementsChart', 'overviewMeasurements', entries, ['waist','hips']);
+        this.buildMeasurementsChart('overviewMeasurementsChart', 'overviewMeasurements', entries, ['waist','hips','butt']);
     }
 
     renderOverviewActiveBets() {
@@ -626,7 +627,7 @@ class TrackerApp {
         } else {
             empty.style.display = 'none';
             document.getElementById('measurementsChart').style.display = 'block';
-            this.buildMeasurementsChart('measurementsChart', 'measurementsMain', entries, ['chest','waist','hips','thigh','arm']);
+            this.buildMeasurementsChart('measurementsChart', 'measurementsMain', entries, ['bicep','bust','waist','hips','butt','thigh','calf']);
         }
 
         this.renderMeasurementsTable();
@@ -638,7 +639,7 @@ class TrackerApp {
         const mu = this.mu();
 
         if (entries.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="empty-row">No entries yet</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" class="empty-row">No entries yet</td></tr>';
             return;
         }
 
@@ -659,11 +660,13 @@ class TrackerApp {
             return `
                 <tr>
                     <td>${this.formatDate(m.date)}</td>
-                    <td>${fmtM(m, prev, 'chest')}</td>
+                    <td>${fmtM(m, prev, 'bicep')}</td>
+                    <td>${fmtM(m, prev, 'bust')}</td>
                     <td>${fmtM(m, prev, 'waist')}</td>
                     <td>${fmtM(m, prev, 'hips')}</td>
+                    <td>${fmtM(m, prev, 'butt')}</td>
                     <td>${fmtM(m, prev, 'thigh')}</td>
-                    <td>${fmtM(m, prev, 'arm')}</td>
+                    <td>${fmtM(m, prev, 'calf')}</td>
                     <td><button class="btn-delete" data-delete-measure="${m.id}" title="Delete">✕</button></td>
                 </tr>
             `;
@@ -732,8 +735,8 @@ class TrackerApp {
                 </div>
             `;
         } else {
-            const fields = ['chest','waist','hips','thigh','arm'];
-            const labels = { chest:'Chest', waist:'Waist', hips:'Hips', thigh:'Thigh', arm:'Bicep' };
+            const fields = ['bicep','bust','waist','hips','butt','thigh','calf'];
+            const labels = { bicep:'Bicep', bust:'Bust', waist:'Waist', hips:'Hips', butt:'Butt', thigh:'Thigh', calf:'Calf' };
             const guessedFields = fields.filter(f => bet.youGuess[f] != null || bet.himGuess[f] != null);
             const summary = guessedFields.map(f => `
                 <span class="bet-guess" style="font-size:0.8rem">
@@ -859,16 +862,17 @@ class TrackerApp {
 
         const labels = entries.map(e => this.shortDate(e.date));
         const colors = {
-            chest: '#e11d48',
+            bicep: '#f97316',
+            bust:  '#e11d48',
             waist: '#7c3aed',
             hips:  '#0ea5e9',
+            butt:  '#ec4899',
             thigh: '#d97706',
-            arm:   '#059669',
-            neck:  '#64748b'
+            calf:  '#059669'
         };
         const fieldLabels = {
-            chest: 'Chest', waist: 'Waist', hips: 'Hips',
-            thigh: 'Thigh', arm: 'Bicep', neck: 'Neck'
+            bicep: 'Bicep', bust: 'Bust', waist: 'Waist', hips: 'Hips',
+            butt: 'Butt', thigh: 'Thigh', calf: 'Calf'
         };
         const mu = this.mu();
 

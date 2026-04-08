@@ -194,16 +194,18 @@
                             <thead>
                                 <tr>
                                     <th>Date</th>
-                                    <th>Chest</th>
+                                    <th>Bicep</th>
+                                    <th>Bust</th>
                                     <th>Waist</th>
                                     <th>Hips</th>
+                                    <th>Butt</th>
                                     <th>Thigh</th>
-                                    <th>Arm</th>
+                                    <th>Calf</th>
                                     <th></th>
                                 </tr>
                             </thead>
                             <tbody id="measurementsTableBody">
-                                <tr><td colspan="7" class="empty-row">No entries yet</td></tr>
+                                <tr><td colspan="9" class="empty-row">No entries yet</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -271,8 +273,8 @@
                     <div class="form-group">
                         <label>Weight Unit</label>
                         <div class="radio-group">
-                            <label class="radio-label"><input type="radio" name="weightUnit" value="lbs" checked> lbs</label>
-                            <label class="radio-label"><input type="radio" name="weightUnit" value="kg"> kg</label>
+                            <label class="radio-label"><input type="radio" name="weightUnit" value="lbs"> lbs</label>
+                            <label class="radio-label"><input type="radio" name="weightUnit" value="kg" checked> kg</label>
                         </div>
                     </div>
                     <div class="form-group">
@@ -315,8 +317,8 @@
                     <input type="date" id="weightDate" class="input" required>
                 </div>
                 <div class="form-group">
-                    <label for="weightValue">Weight (<span class="unit-label">lbs</span>)</label>
-                    <input type="number" id="weightValue" class="input" step="0.1" min="0" placeholder="e.g. 145.5" required>
+                    <label for="weightValue">Weight (<span class="unit-label">kg</span>)</label>
+                    <input type="number" id="weightValue" class="input" step="0.1" min="0" placeholder="e.g. 65.0" required>
                 </div>
                 <div class="form-group">
                     <label for="weightNote">Note (optional)</label>
@@ -345,28 +347,32 @@
                 </div>
                 <div class="measurements-grid">
                     <div class="form-group">
-                        <label for="measureChest">Chest (<span class="measure-unit-label">in</span>)</label>
-                        <input type="number" id="measureChest" class="input" step="0.1" min="0" placeholder="e.g. 36.5">
+                        <label for="measureBicep">Bicep (<span class="measure-unit-label">cm</span>)</label>
+                        <input type="number" id="measureBicep" class="input" step="0.1" min="0" placeholder="e.g. 30.0">
                     </div>
                     <div class="form-group">
-                        <label for="measureWaist">Waist (<span class="measure-unit-label">in</span>)</label>
-                        <input type="number" id="measureWaist" class="input" step="0.1" min="0" placeholder="e.g. 28.0">
+                        <label for="measureBust">Bust (<span class="measure-unit-label">cm</span>)</label>
+                        <input type="number" id="measureBust" class="input" step="0.1" min="0" placeholder="e.g. 92.0">
                     </div>
                     <div class="form-group">
-                        <label for="measureHips">Hips (<span class="measure-unit-label">in</span>)</label>
-                        <input type="number" id="measureHips" class="input" step="0.1" min="0" placeholder="e.g. 38.0">
+                        <label for="measureWaist">Waist (<span class="measure-unit-label">cm</span>)</label>
+                        <input type="number" id="measureWaist" class="input" step="0.1" min="0" placeholder="e.g. 72.0">
                     </div>
                     <div class="form-group">
-                        <label for="measureThigh">Thigh (<span class="measure-unit-label">in</span>)</label>
-                        <input type="number" id="measureThigh" class="input" step="0.1" min="0" placeholder="e.g. 22.0">
+                        <label for="measureHips">Hips (<span class="measure-unit-label">cm</span>)</label>
+                        <input type="number" id="measureHips" class="input" step="0.1" min="0" placeholder="e.g. 96.0">
                     </div>
                     <div class="form-group">
-                        <label for="measureArm">Bicep (<span class="measure-unit-label">in</span>)</label>
-                        <input type="number" id="measureArm" class="input" step="0.1" min="0" placeholder="e.g. 12.0">
+                        <label for="measureButt">Butt (<span class="measure-unit-label">cm</span>)</label>
+                        <input type="number" id="measureButt" class="input" step="0.1" min="0" placeholder="e.g. 98.0">
                     </div>
                     <div class="form-group">
-                        <label for="measureNeck">Neck (<span class="measure-unit-label">in</span>)</label>
-                        <input type="number" id="measureNeck" class="input" step="0.1" min="0" placeholder="e.g. 13.5">
+                        <label for="measureThigh">Thigh (<span class="measure-unit-label">cm</span>)</label>
+                        <input type="number" id="measureThigh" class="input" step="0.1" min="0" placeholder="e.g. 56.0">
+                    </div>
+                    <div class="form-group">
+                        <label for="measureCalf">Calf (<span class="measure-unit-label">cm</span>)</label>
+                        <input type="number" id="measureCalf" class="input" step="0.1" min="0" placeholder="e.g. 36.0">
                     </div>
                 </div>
                 <div class="modal-actions">
@@ -393,12 +399,12 @@
                 </div>
                 <div class="bet-guesses">
                     <div class="form-group">
-                        <label for="betWeightYou">Your Guess (<span class="unit-label">lbs</span>)</label>
-                        <input type="number" id="betWeightYou" class="input you-input" step="0.1" min="0" placeholder="e.g. 144.8" required>
+                        <label for="betWeightYou">Your Guess (<span class="unit-label">kg</span>)</label>
+                        <input type="number" id="betWeightYou" class="input you-input" step="0.1" min="0" placeholder="e.g. 64.8" required>
                     </div>
                     <div class="form-group">
-                        <label for="betWeightHim">His Guess (<span class="unit-label">lbs</span>)</label>
-                        <input type="number" id="betWeightHim" class="input him-input" step="0.1" min="0" placeholder="e.g. 145.2" required>
+                        <label for="betWeightHim">His Guess (<span class="unit-label">kg</span>)</label>
+                        <input type="number" id="betWeightHim" class="input him-input" step="0.1" min="0" placeholder="e.g. 65.2" required>
                     </div>
                 </div>
                 <div class="modal-actions">
@@ -427,47 +433,63 @@
                     <div class="bet-column">
                         <h4 class="you-heading">Your Guesses</h4>
                         <div class="form-group">
-                            <label>Chest (<span class="measure-unit-label">in</span>)</label>
-                            <input type="number" class="input you-input" name="youChest" step="0.1" min="0" placeholder="—">
+                            <label>Bicep (<span class="measure-unit-label">cm</span>)</label>
+                            <input type="number" class="input you-input" name="youBicep" step="0.1" min="0" placeholder="—">
                         </div>
                         <div class="form-group">
-                            <label>Waist (<span class="measure-unit-label">in</span>)</label>
+                            <label>Bust (<span class="measure-unit-label">cm</span>)</label>
+                            <input type="number" class="input you-input" name="youBust" step="0.1" min="0" placeholder="—">
+                        </div>
+                        <div class="form-group">
+                            <label>Waist (<span class="measure-unit-label">cm</span>)</label>
                             <input type="number" class="input you-input" name="youWaist" step="0.1" min="0" placeholder="—">
                         </div>
                         <div class="form-group">
-                            <label>Hips (<span class="measure-unit-label">in</span>)</label>
+                            <label>Hips (<span class="measure-unit-label">cm</span>)</label>
                             <input type="number" class="input you-input" name="youHips" step="0.1" min="0" placeholder="—">
                         </div>
                         <div class="form-group">
-                            <label>Thigh (<span class="measure-unit-label">in</span>)</label>
+                            <label>Butt (<span class="measure-unit-label">cm</span>)</label>
+                            <input type="number" class="input you-input" name="youButt" step="0.1" min="0" placeholder="—">
+                        </div>
+                        <div class="form-group">
+                            <label>Thigh (<span class="measure-unit-label">cm</span>)</label>
                             <input type="number" class="input you-input" name="youThigh" step="0.1" min="0" placeholder="—">
                         </div>
                         <div class="form-group">
-                            <label>Bicep (<span class="measure-unit-label">in</span>)</label>
-                            <input type="number" class="input you-input" name="youArm" step="0.1" min="0" placeholder="—">
+                            <label>Calf (<span class="measure-unit-label">cm</span>)</label>
+                            <input type="number" class="input you-input" name="youCalf" step="0.1" min="0" placeholder="—">
                         </div>
                     </div>
                     <div class="bet-column">
                         <h4 class="him-heading">His Guesses</h4>
                         <div class="form-group">
-                            <label>Chest (<span class="measure-unit-label">in</span>)</label>
-                            <input type="number" class="input him-input" name="himChest" step="0.1" min="0" placeholder="—">
+                            <label>Bicep (<span class="measure-unit-label">cm</span>)</label>
+                            <input type="number" class="input him-input" name="himBicep" step="0.1" min="0" placeholder="—">
                         </div>
                         <div class="form-group">
-                            <label>Waist (<span class="measure-unit-label">in</span>)</label>
+                            <label>Bust (<span class="measure-unit-label">cm</span>)</label>
+                            <input type="number" class="input him-input" name="himBust" step="0.1" min="0" placeholder="—">
+                        </div>
+                        <div class="form-group">
+                            <label>Waist (<span class="measure-unit-label">cm</span>)</label>
                             <input type="number" class="input him-input" name="himWaist" step="0.1" min="0" placeholder="—">
                         </div>
                         <div class="form-group">
-                            <label>Hips (<span class="measure-unit-label">in</span>)</label>
+                            <label>Hips (<span class="measure-unit-label">cm</span>)</label>
                             <input type="number" class="input him-input" name="himHips" step="0.1" min="0" placeholder="—">
                         </div>
                         <div class="form-group">
-                            <label>Thigh (<span class="measure-unit-label">in</span>)</label>
+                            <label>Butt (<span class="measure-unit-label">cm</span>)</label>
+                            <input type="number" class="input him-input" name="himButt" step="0.1" min="0" placeholder="—">
+                        </div>
+                        <div class="form-group">
+                            <label>Thigh (<span class="measure-unit-label">cm</span>)</label>
                             <input type="number" class="input him-input" name="himThigh" step="0.1" min="0" placeholder="—">
                         </div>
                         <div class="form-group">
-                            <label>Bicep (<span class="measure-unit-label">in</span>)</label>
-                            <input type="number" class="input him-input" name="himArm" step="0.1" min="0" placeholder="—">
+                            <label>Calf (<span class="measure-unit-label">cm</span>)</label>
+                            <input type="number" class="input him-input" name="himCalf" step="0.1" min="0" placeholder="—">
                         </div>
                     </div>
                 </div>
