@@ -1,0 +1,2461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weight & Measurement Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+/* ============================================
+   RESET & VARIABLES
+   ============================================ */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --you: #e11d48;        /* rose-600 */
+    --you-light: #fecdd3;  /* rose-200 */
+    --you-bg: #fff1f2;     /* rose-50 */
+    --him: #7c3aed;        /* violet-600 */
+    --him-light: #ddd6fe;  /* violet-200 */
+    --him-bg: #f5f3ff;     /* violet-50 */
+    --success: #059669;
+    --success-bg: #d1fae5;
+    --warning: #d97706;
+    --warning-bg: #fef3c7;
+    --danger: #dc2626;
+    --danger-bg: #fee2e2;
+
+    --bg: #fdf2f4;
+    --surface: #ffffff;
+    --border: #f0e0e4;
+    --text: #1c1917;
+    --text-muted: #78716c;
+    --text-light: #a8a29e;
+    --shadow-sm: 0 1px 3px rgba(225, 29, 72, 0.06);
+    --shadow: 0 4px 16px rgba(225, 29, 72, 0.08);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --radius-xs: 6px;
+}
+
+/* ============================================
+   BASE
+   ============================================ */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    color: var(--text);
+    line-height: 1.5;
+}
+
+/* ============================================
+   APP LAYOUT
+   ============================================ */
+.app {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 1rem 3rem;
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+.app-header {
+    background: linear-gradient(135deg, #e11d48 0%, #be185d 50%, #9d174d 100%);
+    margin: 0 -1rem;
+    padding: 2rem 2rem 0;
+    border-radius: 0 0 24px 24px;
+    box-shadow: 0 8px 32px rgba(225, 29, 72, 0.2);
+    margin-bottom: 2rem;
+}
+
+.header-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.header-title h1 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: white;
+    letter-spacing: -0.03em;
+}
+
+.header-sub {
+    color: rgba(255,255,255,0.75);
+    font-size: 0.9rem;
+    margin-top: 0.2rem;
+}
+
+.score-badge {
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 12px;
+    padding: 0.6rem 1.2rem;
+    text-align: center;
+}
+
+.score-label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: rgba(255,255,255,0.7);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.score-value {
+    font-size: 1rem;
+    font-weight: 800;
+    color: white;
+}
+
+/* ============================================
+   TAB NAVIGATION
+   ============================================ */
+.tab-nav {
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.tab-nav::-webkit-scrollbar { display: none; }
+
+.tab-btn {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.65);
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 0.85rem 1.25rem;
+    cursor: pointer;
+    position: relative;
+    white-space: nowrap;
+    transition: color 0.2s;
+}
+
+.tab-btn:hover { color: rgba(255,255,255,0.9); }
+
+.tab-btn.active {
+    color: white;
+}
+
+.tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0.5rem;
+    right: 0.5rem;
+    height: 3px;
+    background: white;
+    border-radius: 3px 3px 0 0;
+}
+
+/* ============================================
+   TAB CONTENT
+   ============================================ */
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* ============================================
+   SECTION HEADER
+   ============================================ */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.section-header h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.section-sub {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin-top: 0.2rem;
+}
+
+.header-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+/* ============================================
+   CARDS
+   ============================================ */
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.card-header h2, .card-header h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+/* ============================================
+   STATS ROW
+   ============================================ */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.you-card { border-color: var(--you-light); background: var(--you-bg); }
+.him-card { border-color: var(--him-light); background: var(--him-bg); }
+
+.stat-icon {
+    font-size: 2rem;
+    width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    border-radius: 12px;
+    flex-shrink: 0;
+}
+
+.stat-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.stat-delta {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.1rem;
+}
+
+.stat-delta.down { color: var(--success); }
+.stat-delta.up { color: var(--danger); }
+
+/* ============================================
+   OVERVIEW GRID
+   ============================================ */
+.overview-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+}
+
+@media (max-width: 700px) {
+    .overview-grid { grid-template-columns: 1fr; }
+}
+
+/* ============================================
+   CHARTS
+   ============================================ */
+.chart-wrap {
+    position: relative;
+    height: 200px;
+}
+
+.chart-wrap.tall {
+    height: 280px;
+}
+
+.empty-chart {
+    display: none;
+    text-align: center;
+    color: var(--text-light);
+    font-size: 0.875rem;
+    padding: 2rem 0 0.5rem;
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.6rem 1.25rem;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #e11d48, #be185d);
+    color: white;
+    box-shadow: 0 2px 8px rgba(225, 29, 72, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(225, 29, 72, 0.4);
+}
+
+.btn-outline {
+    background: transparent;
+    color: var(--you);
+    border: 1.5px solid var(--you-light);
+}
+
+.btn-outline:hover {
+    background: var(--you-bg);
+}
+
+.btn-ghost {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1.5px solid var(--border);
+}
+
+.btn-ghost:hover {
+    background: var(--bg);
+}
+
+.btn-danger {
+    background: var(--danger-bg);
+    color: var(--danger);
+    border: 1px solid #fca5a5;
+}
+
+.btn-danger:hover {
+    background: #fecaca;
+}
+
+.btn-sm {
+    padding: 0.4rem 0.9rem;
+    font-size: 0.825rem;
+    border-radius: var(--radius-xs);
+}
+
+.btn-resolve {
+    background: var(--success-bg);
+    color: var(--success);
+    border: 1px solid #6ee7b7;
+    font-size: 0.8rem;
+    padding: 0.35rem 0.8rem;
+    border-radius: var(--radius-xs);
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.15s;
+}
+
+.btn-resolve:hover { background: #a7f3d0; }
+
+.btn-delete {
+    background: none;
+    border: none;
+    color: var(--text-light);
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: color 0.15s;
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.btn-delete:hover { color: var(--danger); }
+
+/* ============================================
+   SELECTS
+   ============================================ */
+.select-sm {
+    padding: 0.4rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    font-size: 0.825rem;
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+}
+
+.select-sm:focus { outline: none; border-color: var(--you); }
+
+/* ============================================
+   TABLES
+   ============================================ */
+.table-wrap {
+    overflow-x: auto;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.data-table th {
+    text-align: left;
+    padding: 0.6rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+}
+
+.data-table td {
+    padding: 0.75rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+}
+
+.data-table tr:last-child td {
+    border-bottom: none;
+}
+
+.data-table tr:hover td {
+    background: var(--bg);
+}
+
+.empty-row {
+    text-align: center;
+    color: var(--text-light);
+    padding: 2rem !important;
+    font-style: italic;
+}
+
+.change-down { color: var(--success); font-weight: 600; }
+.change-up   { color: var(--danger); font-weight: 600; }
+.change-none { color: var(--text-light); }
+
+/* ============================================
+   BET CARDS
+   ============================================ */
+.bet-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.75rem;
+    transition: box-shadow 0.15s;
+}
+
+.bet-card:last-child { margin-bottom: 0; }
+
+.bet-card:hover { box-shadow: var(--shadow); }
+
+.bet-card-active {
+    border-color: var(--warning);
+    background: var(--warning-bg);
+}
+
+.bet-card-won-you {
+    border-color: var(--you-light);
+    background: var(--you-bg);
+}
+
+.bet-card-won-him {
+    border-color: var(--him-light);
+    background: var(--him-bg);
+}
+
+.bet-card-tie {
+    border-color: #e5e7eb;
+    background: #f9fafb;
+}
+
+.bet-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.bet-type-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    background: var(--border);
+    color: var(--text-muted);
+}
+
+.bet-date {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.bet-guesses-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.bet-guess {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.bet-guess-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+}
+
+.bet-guess-val {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.bet-guess-val.you-val { color: var(--you); }
+.bet-guess-val.him-val { color: var(--him); }
+.bet-guess-val.actual-val { color: var(--text); }
+
+.bet-vs {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    font-weight: 600;
+    align-self: center;
+}
+
+.bet-winner-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0.3rem 0.7rem;
+    border-radius: 20px;
+    margin-top: 0.5rem;
+}
+
+.winner-you { background: var(--you-light); color: var(--you); }
+.winner-him { background: var(--him-light); color: var(--him); }
+.winner-tie { background: #e5e7eb; color: #374151; }
+
+.bet-actions {
+    margin-top: 0.75rem;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.bet-details-toggle {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    text-decoration: underline;
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.bet-details {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border);
+    display: none;
+}
+
+.bet-details.open { display: block; }
+
+.bet-detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.2rem 0;
+}
+
+/* ============================================
+   SCOREBOARD
+   ============================================ */
+.scoreboard {
+    background: linear-gradient(135deg, #fff1f2, #f5f3ff);
+    border: none;
+}
+
+.score-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    padding: 0.75rem 0;
+}
+
+.player-score {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+}
+
+.player-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.player-wins {
+    font-size: 3rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.you-score .player-wins { color: var(--you); }
+.him-score .player-wins { color: var(--him); }
+
+.player-label {
+    font-size: 0.75rem;
+    color: var(--text-light);
+}
+
+.vs-divider {
+    font-size: 1.25rem;
+    font-weight: 900;
+    color: var(--text-light);
+}
+
+/* ============================================
+   FORMS
+   ============================================ */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 0.4rem;
+}
+
+.input {
+    width: 100%;
+    padding: 0.7rem 0.9rem;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-family: inherit;
+    background: var(--surface);
+    color: var(--text);
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.input:focus {
+    outline: none;
+    border-color: var(--you);
+    box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.1);
+}
+
+.you-input:focus {
+    border-color: var(--you);
+    box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.1);
+}
+
+.him-input:focus {
+    border-color: var(--him);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.radio-group {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.radio-label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--text);
+}
+
+.radio-label input { accent-color: var(--you); }
+
+.measurements-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 1rem;
+}
+
+.bet-guesses {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.bet-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.you-heading { color: var(--you); font-size: 0.9rem; margin-bottom: 0.75rem; }
+.him-heading { color: var(--him); font-size: 0.9rem; margin-bottom: 0.75rem; }
+
+/* ============================================
+   MODALS
+   ============================================ */
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+}
+
+.modal.open { display: flex; }
+
+.modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+}
+
+.modal-box {
+    position: relative;
+    z-index: 1;
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 1.75rem;
+    width: 90%;
+    max-width: 480px;
+    max-height: 92vh;
+    overflow-y: auto;
+    margin: auto;
+    box-shadow: 0 24px 48px rgba(0,0,0,0.15);
+    animation: slideUp 0.2s ease-out;
+}
+
+.modal-box-wide {
+    max-width: 640px;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(24px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+}
+
+.modal-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+}
+
+.modal-head h2 {
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.2rem;
+    border-radius: 4px;
+    transition: color 0.15s;
+    line-height: 1;
+}
+
+.modal-close:hover { color: var(--text); }
+
+.modal-desc {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin-bottom: 1.25rem;
+    line-height: 1.5;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+}
+
+/* ============================================
+   SETTINGS
+   ============================================ */
+.settings-card {
+    max-width: 520px;
+}
+
+.settings-card h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+    color: var(--text);
+}
+
+.divider {
+    height: 1px;
+    background: var(--border);
+    margin: 1.5rem 0;
+}
+
+.hint-text {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+}
+
+/* ============================================
+   LEGEND
+   ============================================ */
+.legend {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* ============================================
+   EMPTY STATES
+   ============================================ */
+.empty-msg {
+    text-align: center;
+    color: var(--text-light);
+    font-size: 0.875rem;
+    padding: 1.5rem 0;
+    font-style: italic;
+}
+
+/* ============================================
+   TOAST
+   ============================================ */
+.toast {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(8px);
+    background: #1c1917;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 24px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    z-index: 5000;
+    opacity: 0;
+    transition: all 0.25s ease;
+    pointer-events: none;
+    white-space: nowrap;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 640px) {
+    .app-header { padding: 1.5rem 1rem 0; }
+    .header-title h1 { font-size: 1.4rem; }
+    .stats-row { grid-template-columns: 1fr 1fr; }
+    .measurements-grid { grid-template-columns: 1fr; }
+    .bet-guesses { grid-template-columns: 1fr; }
+    .bet-columns { grid-template-columns: 1fr; }
+    .section-header { flex-direction: column; align-items: flex-start; }
+    .tab-btn { padding: 0.75rem 1rem; font-size: 0.8rem; }
+}
+
+@media (max-width: 400px) {
+    .stats-row { grid-template-columns: 1fr; }
+}
+
+    </style>
+</head>
+<body>
+<div class="app">
+        <header class="app-header">
+            <div class="header-inner">
+                <div class="header-title">
+                    <h1>My Progress Tracker</h1>
+                    <p class="header-sub">Track weight, measurements & bets</p>
+                </div>
+                <div class="score-badge">
+                    <span class="score-label">Score</span>
+                    <span id="headerScore" class="score-value">You 0 – 0 Him</span>
+                </div>
+            </div>
+            <nav class="tab-nav">
+                <button class="tab-btn active" data-tab="overview">Overview</button>
+                <button class="tab-btn" data-tab="weight">Weight</button>
+                <button class="tab-btn" data-tab="measurements">Measurements</button>
+                <button class="tab-btn" data-tab="bets">Bets</button>
+                <button class="tab-btn" data-tab="settings">Settings</button>
+            </nav>
+        </header>
+
+        <main class="app-main">
+
+            <!-- ===== OVERVIEW TAB ===== -->
+            <section class="tab-content active" id="tab-overview">
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-icon weight-icon">⚖️</div>
+                        <div class="stat-info">
+                            <span class="stat-label">Current Weight</span>
+                            <span class="stat-value" id="statCurrentWeight">—</span>
+                            <span class="stat-delta" id="statWeightDelta"></span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon measure-icon">📏</div>
+                        <div class="stat-info">
+                            <span class="stat-label">Last Waist</span>
+                            <span class="stat-value" id="statCurrentWaist">—</span>
+                            <span class="stat-delta" id="statWaistDelta"></span>
+                        </div>
+                    </div>
+                    <div class="stat-card you-card">
+                        <div class="stat-icon">🏆</div>
+                        <div class="stat-info">
+                            <span class="stat-label">Your Wins</span>
+                            <span class="stat-value" id="statYouWins">0</span>
+                            <span class="stat-delta">bets won</span>
+                        </div>
+                    </div>
+                    <div class="stat-card him-card">
+                        <div class="stat-icon">🎯</div>
+                        <div class="stat-info">
+                            <span class="stat-label">His Wins</span>
+                            <span class="stat-value" id="statHimWins">0</span>
+                            <span class="stat-delta">bets won</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overview-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Weight (last 30 days)</h2>
+                        </div>
+                        <div class="chart-wrap">
+                            <canvas id="overviewWeightChart"></canvas>
+                        </div>
+                        <p class="empty-chart" id="overviewWeightEmpty">No weight entries yet. Log your first weight!</p>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Active Bets</h2>
+                            <button class="btn btn-sm btn-primary" id="overviewPlaceBetBtn">+ New Bet</button>
+                        </div>
+                        <div id="overviewActiveBets">
+                            <p class="empty-msg">No active bets. Place one!</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Measurements Progress</h2>
+                        </div>
+                        <div class="chart-wrap">
+                            <canvas id="overviewMeasurementsChart"></canvas>
+                        </div>
+                        <p class="empty-chart" id="overviewMeasurementsEmpty">No measurements yet.</p>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Bet History</h2>
+                        </div>
+                        <div id="overviewBetHistory">
+                            <p class="empty-msg">No resolved bets yet.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== WEIGHT TAB ===== -->
+            <section class="tab-content" id="tab-weight">
+                <div class="section-header">
+                    <div>
+                        <h2>Daily Weight</h2>
+                        <p class="section-sub">Log your morning weight every day</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-outline" id="placeBetWeightBtn">🎲 Bet Tomorrow</button>
+                        <button class="btn btn-primary" id="logWeightBtn">+ Log Weight</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Weight Over Time</h3>
+                        <select class="select-sm" id="weightChartRange">
+                            <option value="30">Last 30 days</option>
+                            <option value="90">Last 90 days</option>
+                            <option value="180">Last 6 months</option>
+                            <option value="0">All time</option>
+                        </select>
+                    </div>
+                    <div class="chart-wrap tall">
+                        <canvas id="weightChart"></canvas>
+                    </div>
+                    <p class="empty-chart" id="weightChartEmpty">No entries yet. Start logging!</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Weight Log</h3>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="data-table" id="weightTable">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Weight</th>
+                                    <th>Change</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="weightTableBody">
+                                <tr><td colspan="4" class="empty-row">No entries yet</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== MEASUREMENTS TAB ===== -->
+            <section class="tab-content" id="tab-measurements">
+                <div class="section-header">
+                    <div>
+                        <h2>Body Measurements</h2>
+                        <p class="section-sub">Log measurements every two weeks</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-outline" id="placeBetMeasurementsBtn">🎲 Bet Next Session</button>
+                        <button class="btn btn-primary" id="logMeasurementsBtn">+ Log Measurements</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Measurements Over Time</h3>
+                        <div class="legend" id="measurementsLegend"></div>
+                    </div>
+                    <div class="chart-wrap tall">
+                        <canvas id="measurementsChart"></canvas>
+                    </div>
+                    <p class="empty-chart" id="measurementsChartEmpty">No measurements yet. Start logging!</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Measurements Log</h3>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="data-table" id="measurementsTable">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Chest</th>
+                                    <th>Waist</th>
+                                    <th>Hips</th>
+                                    <th>Thigh</th>
+                                    <th>Arm</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="measurementsTableBody">
+                                <tr><td colspan="7" class="empty-row">No entries yet</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== BETS TAB ===== -->
+            <section class="tab-content" id="tab-bets">
+                <div class="section-header">
+                    <div>
+                        <h2>Bets</h2>
+                        <p class="section-sub">Guess tomorrow's weight or next measurement session</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-outline" id="newWeightBetBtn">⚖️ Weight Bet</button>
+                        <button class="btn btn-primary" id="newMeasurementsBetBtn">📏 Measurements Bet</button>
+                    </div>
+                </div>
+
+                <div class="scoreboard card">
+                    <h3>Scoreboard</h3>
+                    <div class="score-row">
+                        <div class="player-score you-score">
+                            <span class="player-name">You</span>
+                            <span class="player-wins" id="youWinsDisplay">0</span>
+                            <span class="player-label">wins</span>
+                        </div>
+                        <div class="vs-divider">VS</div>
+                        <div class="player-score him-score">
+                            <span class="player-name" id="husbandNameDisplay">Him</span>
+                            <span class="player-wins" id="himWinsDisplay">0</span>
+                            <span class="player-label">wins</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Active Bets</h3>
+                    </div>
+                    <div id="activeBetsList">
+                        <p class="empty-msg">No active bets. Place a new one!</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Bet History</h3>
+                    </div>
+                    <div id="betHistoryList">
+                        <p class="empty-msg">No resolved bets yet.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== SETTINGS TAB ===== -->
+            <section class="tab-content" id="tab-settings">
+                <div class="section-header">
+                    <div>
+                        <h2>Settings</h2>
+                    </div>
+                </div>
+                <div class="card settings-card">
+                    <h3>Preferences</h3>
+                    <div class="form-group">
+                        <label>Weight Unit</label>
+                        <div class="radio-group">
+                            <label class="radio-label"><input type="radio" name="weightUnit" value="lbs" checked> lbs</label>
+                            <label class="radio-label"><input type="radio" name="weightUnit" value="kg"> kg</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Measurement Unit</label>
+                        <div class="radio-group">
+                            <label class="radio-label"><input type="radio" name="measureUnit" value="in" checked> inches</label>
+                            <label class="radio-label"><input type="radio" name="measureUnit" value="cm"> cm</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="husbandName">Husband's Name</label>
+                        <input type="text" id="husbandName" class="input" placeholder="e.g. John" maxlength="20">
+                    </div>
+                    <div class="form-group">
+                        <label for="yourName">Your Name</label>
+                        <input type="text" id="yourName" class="input" placeholder="e.g. Jane" maxlength="20">
+                    </div>
+                    <button class="btn btn-primary" id="saveSettingsBtn">Save Settings</button>
+                    <div class="divider"></div>
+                    <h3>Data</h3>
+                    <p class="hint-text">All data is stored locally in your browser.</p>
+                    <button class="btn btn-danger" id="clearDataBtn">Clear All Data</button>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ===== MODAL: Log Weight ===== -->
+    <div class="modal" id="weightModal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-box">
+            <div class="modal-head">
+                <h2>Log Weight</h2>
+                <button class="modal-close">✕</button>
+            </div>
+            <form id="weightForm">
+                <div class="form-group">
+                    <label for="weightDate">Date</label>
+                    <input type="date" id="weightDate" class="input" required>
+                </div>
+                <div class="form-group">
+                    <label for="weightValue">Weight (<span class="unit-label">lbs</span>)</label>
+                    <input type="number" id="weightValue" class="input" step="0.1" min="0" placeholder="e.g. 145.5" required>
+                </div>
+                <div class="form-group">
+                    <label for="weightNote">Note (optional)</label>
+                    <input type="text" id="weightNote" class="input" placeholder="e.g. after workout">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-ghost modal-cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== MODAL: Log Measurements ===== -->
+    <div class="modal" id="measurementsModal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-box modal-box-wide">
+            <div class="modal-head">
+                <h2>Log Measurements</h2>
+                <button class="modal-close">✕</button>
+            </div>
+            <form id="measurementsForm">
+                <div class="form-group">
+                    <label for="measureDate">Date</label>
+                    <input type="date" id="measureDate" class="input" required>
+                </div>
+                <div class="measurements-grid">
+                    <div class="form-group">
+                        <label for="measureChest">Chest (<span class="measure-unit-label">in</span>)</label>
+                        <input type="number" id="measureChest" class="input" step="0.1" min="0" placeholder="e.g. 36.5">
+                    </div>
+                    <div class="form-group">
+                        <label for="measureWaist">Waist (<span class="measure-unit-label">in</span>)</label>
+                        <input type="number" id="measureWaist" class="input" step="0.1" min="0" placeholder="e.g. 28.0">
+                    </div>
+                    <div class="form-group">
+                        <label for="measureHips">Hips (<span class="measure-unit-label">in</span>)</label>
+                        <input type="number" id="measureHips" class="input" step="0.1" min="0" placeholder="e.g. 38.0">
+                    </div>
+                    <div class="form-group">
+                        <label for="measureThigh">Thigh (<span class="measure-unit-label">in</span>)</label>
+                        <input type="number" id="measureThigh" class="input" step="0.1" min="0" placeholder="e.g. 22.0">
+                    </div>
+                    <div class="form-group">
+                        <label for="measureArm">Bicep (<span class="measure-unit-label">in</span>)</label>
+                        <input type="number" id="measureArm" class="input" step="0.1" min="0" placeholder="e.g. 12.0">
+                    </div>
+                    <div class="form-group">
+                        <label for="measureNeck">Neck (<span class="measure-unit-label">in</span>)</label>
+                        <input type="number" id="measureNeck" class="input" step="0.1" min="0" placeholder="e.g. 13.5">
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-ghost modal-cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== MODAL: Place Weight Bet ===== -->
+    <div class="modal" id="weightBetModal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-box">
+            <div class="modal-head">
+                <h2>🎲 Weight Bet</h2>
+                <button class="modal-close">✕</button>
+            </div>
+            <p class="modal-desc">Both guess what tomorrow's morning weight will be. Closest wins!</p>
+            <form id="weightBetForm">
+                <div class="form-group">
+                    <label for="betWeightDate">Target Date (weigh-in morning)</label>
+                    <input type="date" id="betWeightDate" class="input" required>
+                </div>
+                <div class="bet-guesses">
+                    <div class="form-group">
+                        <label for="betWeightYou">Your Guess (<span class="unit-label">lbs</span>)</label>
+                        <input type="number" id="betWeightYou" class="input you-input" step="0.1" min="0" placeholder="e.g. 144.8" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="betWeightHim">His Guess (<span class="unit-label">lbs</span>)</label>
+                        <input type="number" id="betWeightHim" class="input him-input" step="0.1" min="0" placeholder="e.g. 145.2" required>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-ghost modal-cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Place Bet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== MODAL: Place Measurements Bet ===== -->
+    <div class="modal" id="measurementsBetModal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-box modal-box-wide">
+            <div class="modal-head">
+                <h2>📏 Measurements Bet</h2>
+                <button class="modal-close">✕</button>
+            </div>
+            <p class="modal-desc">Both guess the measurements for the next session. Lowest total error wins!</p>
+            <form id="measurementsBetForm">
+                <div class="form-group">
+                    <label for="betMeasureDate">Target Date (measurement session)</label>
+                    <input type="date" id="betMeasureDate" class="input" required>
+                </div>
+                <div class="bet-columns">
+                    <div class="bet-column">
+                        <h4 class="you-heading">Your Guesses</h4>
+                        <div class="form-group">
+                            <label>Chest (<span class="measure-unit-label">in</span>)</label>
+                            <input type="number" class="input you-input" name="youChest" step="0.1" min="0" placeholder="—">
+                        </div>
+                        <div class="form-group">
+                            <label>Waist (<span class="measure-unit-label">in</span>)</label>
+                            <input type="number" class="input you-input" name="youWaist" step="0.1" min="0" placeholder="—">
+                        </div>
+                        <div class="form-group">
+                            <label>Hips (<span class="measure-unit-label">in</span>)</label>
+                            <input type="number" class="input you-input" name="youHips" step="0.1" min="0" placeholder="—">
+                        </div>
+                        <div class="form-group">
+                            <label>Thigh (<span class="measure-unit-label">in</span>)</label>
+                            <input type="number" class="input you-input" name="youThigh" step="0.1" min="0" placeholder="—">
+                        </div>
+                        <div class="form-group">
+                            <label>Bicep (<span class="measure-unit-label">in</span>)</label>
+                            <input type="number" class="input you-input" name="youArm" step="0.1" min="0" placeholder="—">
+                        </div>
+                    </div>
+                    <div class="bet-column">
+                        <h4 class="him-heading">His Guesses</h4>
+                        <div class="form-group">
+                            <label>Chest (<span class="measure-unit-label">in</span>)</label>
+                            <input type="number" class="input him-input" name="himChest" step="0.1" min="0" placeholder="—">
+                        </div>
+                        <div class="form-group">
+                            <label>Waist (<span class="measure-unit-label">in</span>)</label>
+                            <input type="number" class="input him-input" name="himWaist" step="0.1" min="0" placeholder="—">
+                        </div>
+                        <div class="form-group">
+                            <label>Hips (<span class="measure-unit-label">in</span>)</label>
+                            <input type="number" class="input him-input" name="himHips" step="0.1" min="0" placeholder="—">
+                        </div>
+                        <div class="form-group">
+                            <label>Thigh (<span class="measure-unit-label">in</span>)</label>
+                            <input type="number" class="input him-input" name="himThigh" step="0.1" min="0" placeholder="—">
+                        </div>
+                        <div class="form-group">
+                            <label>Bicep (<span class="measure-unit-label">in</span>)</label>
+                            <input type="number" class="input him-input" name="himArm" step="0.1" min="0" placeholder="—">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-ghost modal-cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Place Bet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== MODAL: Resolve Bet ===== -->
+    <div class="modal" id="resolveModal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-box modal-box-wide">
+            <div class="modal-head">
+                <h2 id="resolveModalTitle">Resolve Bet</h2>
+                <button class="modal-close">✕</button>
+            </div>
+            <div id="resolveModalContent"></div>
+        </div>
+    </div>
+
+    <!-- ===== TOAST ===== -->
+    <div class="toast" id="toast"></div>
+<script>
+'use strict';
+
+// ============================================================
+//  TRACKER APP
+// ============================================================
+class TrackerApp {
+    constructor() {
+        this.data = this.load();
+        this.charts = {};
+        this.activeTab = 'overview';
+        this.init();
+    }
+
+    // =========================================================
+    //  DATA PERSISTENCE
+    // =========================================================
+    load() {
+        try {
+            const raw = localStorage.getItem('tracker-v1');
+            if (raw) return JSON.parse(raw);
+        } catch (_) {}
+        return {
+            settings: { weightUnit: 'lbs', measureUnit: 'in', yourName: 'You', husbandName: 'Him' },
+            weights: [],       // { id, date, value, note }
+            measurements: [],  // { id, date, chest, waist, hips, thigh, arm, neck }
+            bets: []           // { id, type, targetDate, youGuess, himGuess, actual, winner, resolved, resolvedDate }
+        };
+    }
+
+    save() {
+        localStorage.setItem('tracker-v1', JSON.stringify(this.data));
+    }
+
+    // =========================================================
+    //  INIT
+    // =========================================================
+    init() {
+        this.setupTabs();
+        this.setupModals();
+        this.setupForms();
+        this.setupSettings();
+        this.applySettings();
+        this.render();
+    }
+
+    // =========================================================
+    //  TABS
+    // =========================================================
+    setupTabs() {
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => this.switchTab(btn.dataset.tab));
+        });
+    }
+
+    switchTab(tab) {
+        this.activeTab = tab;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+        document.querySelectorAll('.tab-content').forEach(s => s.classList.toggle('active', s.id === `tab-${tab}`));
+        this.render();
+    }
+
+    // =========================================================
+    //  MODALS
+    // =========================================================
+    setupModals() {
+        // Generic close handlers
+        document.querySelectorAll('.modal-close, .modal-cancel').forEach(btn => {
+            btn.addEventListener('click', () => this.closeAllModals());
+        });
+        document.querySelectorAll('.modal-backdrop').forEach(bd => {
+            bd.addEventListener('click', () => this.closeAllModals());
+        });
+
+        // Log Weight triggers
+        document.getElementById('logWeightBtn').addEventListener('click', () => this.openWeightModal());
+
+        // Log Measurements triggers
+        document.getElementById('logMeasurementsBtn').addEventListener('click', () => this.openMeasurementsModal());
+
+        // Bet triggers
+        document.getElementById('placeBetWeightBtn').addEventListener('click', () => this.openWeightBetModal());
+        document.getElementById('placeBetMeasurementsBtn').addEventListener('click', () => this.openMeasurementsBetModal());
+        document.getElementById('overviewPlaceBetBtn').addEventListener('click', () => this.openWeightBetModal());
+        document.getElementById('newWeightBetBtn').addEventListener('click', () => this.openWeightBetModal());
+        document.getElementById('newMeasurementsBetBtn').addEventListener('click', () => this.openMeasurementsBetModal());
+
+        // Chart range
+        document.getElementById('weightChartRange').addEventListener('change', e => {
+            this.renderWeightChart(parseInt(e.target.value));
+        });
+    }
+
+    closeAllModals() {
+        document.querySelectorAll('.modal').forEach(m => m.classList.remove('open'));
+    }
+
+    openModal(id) {
+        this.closeAllModals();
+        document.getElementById(id).classList.add('open');
+    }
+
+    openWeightModal(prefill = null) {
+        const form = document.getElementById('weightForm');
+        form.reset();
+        document.getElementById('weightDate').value = prefill || this.today();
+        this.openModal('weightModal');
+    }
+
+    openMeasurementsModal(prefill = null) {
+        const form = document.getElementById('measurementsForm');
+        form.reset();
+        document.getElementById('measureDate').value = prefill || this.today();
+        this.openModal('measurementsModal');
+    }
+
+    openWeightBetModal() {
+        const form = document.getElementById('weightBetForm');
+        form.reset();
+        document.getElementById('betWeightDate').value = this.tomorrow();
+        this.openModal('weightBetModal');
+    }
+
+    openMeasurementsBetModal() {
+        const form = document.getElementById('measurementsBetForm');
+        form.reset();
+        // Default to 2 weeks from today
+        document.getElementById('betMeasureDate').value = this.daysFromNow(14);
+        this.openModal('measurementsBetModal');
+    }
+
+    openResolveModal(betId) {
+        const bet = this.data.bets.find(b => b.id === betId);
+        if (!bet) return;
+
+        const { yourName, husbandName } = this.data.settings;
+        const modal = document.getElementById('resolveModal');
+        document.getElementById('resolveModalTitle').textContent = `Resolve Bet — ${this.formatDate(bet.targetDate)}`;
+
+        let html = '';
+        if (bet.type === 'weight') {
+            const u = this.wu();
+            html = `
+                <p class="modal-desc">Enter the actual morning weight to determine the winner.</p>
+                <div class="bet-guesses-row" style="margin-bottom:1.25rem">
+                    <div class="bet-guess">
+                        <span class="bet-guess-label">${yourName}'s Guess</span>
+                        <span class="bet-guess-val you-val">${bet.youGuess} ${u}</span>
+                    </div>
+                    <span class="bet-vs">VS</span>
+                    <div class="bet-guess">
+                        <span class="bet-guess-label">${husbandName}'s Guess</span>
+                        <span class="bet-guess-val him-val">${bet.himGuess} ${u}</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="resolveWeight">Actual Weight (${u})</label>
+                    <input type="number" id="resolveWeight" class="input" step="0.1" min="0" placeholder="e.g. 145.2" required>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-ghost modal-cancel">Cancel</button>
+                    <button class="btn btn-primary" id="resolveConfirmBtn">Confirm Result</button>
+                </div>
+            `;
+        } else {
+            const mu = this.mu();
+            const fields = ['chest','waist','hips','thigh','arm'];
+            const labels = { chest:'Chest', waist:'Waist', hips:'Hips', thigh:'Thigh', arm:'Bicep' };
+            const guessRows = fields.map(f => `
+                <tr>
+                    <td>${labels[f]}</td>
+                    <td class="you-val" style="color:var(--you);font-weight:600">${bet.youGuess[f] != null ? bet.youGuess[f]+' '+mu : '—'}</td>
+                    <td class="him-val" style="color:var(--him);font-weight:600">${bet.himGuess[f] != null ? bet.himGuess[f]+' '+mu : '—'}</td>
+                    <td><input type="number" class="input" data-field="${f}" id="resolveM_${f}" step="0.1" min="0" placeholder="actual" style="width:90px;padding:0.4rem 0.6rem;font-size:0.85rem"></td>
+                </tr>
+            `).join('');
+            html = `
+                <p class="modal-desc">Enter actual measurements to determine the winner. Closest total error wins!</p>
+                <div style="overflow-x:auto;margin-bottom:1.25rem">
+                    <table class="data-table">
+                        <thead><tr><th>Measurement</th><th style="color:var(--you)">${yourName}</th><th style="color:var(--him)">${husbandName}</th><th>Actual</th></tr></thead>
+                        <tbody>${guessRows}</tbody>
+                    </table>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-ghost modal-cancel">Cancel</button>
+                    <button class="btn btn-primary" id="resolveConfirmBtn">Confirm Result</button>
+                </div>
+            `;
+        }
+
+        document.getElementById('resolveModalContent').innerHTML = html;
+
+        // Re-attach cancel listener
+        document.querySelectorAll('.modal-cancel').forEach(b => b.addEventListener('click', () => this.closeAllModals()));
+
+        document.getElementById('resolveConfirmBtn').addEventListener('click', () => {
+            this.resolvebet(bet.id, bet.type);
+        });
+
+        this.openModal('resolveModal');
+    }
+
+    // =========================================================
+    //  FORMS
+    // =========================================================
+    setupForms() {
+        document.getElementById('weightForm').addEventListener('submit', e => {
+            e.preventDefault();
+            this.saveWeight();
+        });
+
+        document.getElementById('measurementsForm').addEventListener('submit', e => {
+            e.preventDefault();
+            this.saveMeasurements();
+        });
+
+        document.getElementById('weightBetForm').addEventListener('submit', e => {
+            e.preventDefault();
+            this.saveWeightBet();
+        });
+
+        document.getElementById('measurementsBetForm').addEventListener('submit', e => {
+            e.preventDefault();
+            this.saveMeasurementsBet();
+        });
+    }
+
+    saveWeight() {
+        const date  = document.getElementById('weightDate').value;
+        const value = parseFloat(document.getElementById('weightValue').value);
+        const note  = document.getElementById('weightNote').value.trim();
+        if (!date || isNaN(value) || value <= 0) return;
+
+        // Prevent duplicate for same date
+        const existing = this.data.weights.findIndex(w => w.date === date);
+        if (existing >= 0) {
+            this.data.weights[existing] = { ...this.data.weights[existing], value, note };
+            this.toast('Weight updated!');
+        } else {
+            this.data.weights.push({ id: this.uid(), date, value, note });
+            this.toast('Weight logged!');
+        }
+
+        this.data.weights.sort((a, b) => a.date.localeCompare(b.date));
+        this.save();
+        this.closeAllModals();
+        this.render();
+    }
+
+    saveMeasurements() {
+        const date = document.getElementById('measureDate').value;
+        if (!date) return;
+        const entry = {
+            id:    this.uid(),
+            date,
+            chest: this.numInput('measureChest'),
+            waist: this.numInput('measureWaist'),
+            hips:  this.numInput('measureHips'),
+            thigh: this.numInput('measureThigh'),
+            arm:   this.numInput('measureArm'),
+            neck:  this.numInput('measureNeck'),
+        };
+
+        // Update or insert
+        const existing = this.data.measurements.findIndex(m => m.date === date);
+        if (existing >= 0) {
+            this.data.measurements[existing] = { ...this.data.measurements[existing], ...entry, id: this.data.measurements[existing].id };
+            this.toast('Measurements updated!');
+        } else {
+            this.data.measurements.push(entry);
+            this.toast('Measurements logged!');
+        }
+
+        this.data.measurements.sort((a, b) => a.date.localeCompare(b.date));
+        this.save();
+        this.closeAllModals();
+        this.render();
+    }
+
+    saveWeightBet() {
+        const targetDate = document.getElementById('betWeightDate').value;
+        const youGuess   = parseFloat(document.getElementById('betWeightYou').value);
+        const himGuess   = parseFloat(document.getElementById('betWeightHim').value);
+        if (!targetDate || isNaN(youGuess) || isNaN(himGuess)) return;
+
+        this.data.bets.push({
+            id: this.uid(), type: 'weight', targetDate,
+            youGuess, himGuess,
+            actual: null, winner: null, resolved: false, resolvedDate: null
+        });
+        this.save();
+        this.closeAllModals();
+        this.toast('Bet placed! Good luck!');
+        this.render();
+    }
+
+    saveMeasurementsBet() {
+        const form = document.getElementById('measurementsBetForm');
+        const targetDate = document.getElementById('betMeasureDate').value;
+        if (!targetDate) return;
+
+        const fields = ['chest','waist','hips','thigh','arm'];
+        const youGuess = {}, himGuess = {};
+        fields.forEach(f => {
+            const youEl = form.querySelector(`[name="you${f.charAt(0).toUpperCase()+f.slice(1)}"]`);
+            const himEl = form.querySelector(`[name="him${f.charAt(0).toUpperCase()+f.slice(1)}"]`);
+            youGuess[f] = youEl && youEl.value !== '' ? parseFloat(youEl.value) : null;
+            himGuess[f] = himEl && himEl.value !== '' ? parseFloat(himEl.value) : null;
+        });
+
+        this.data.bets.push({
+            id: this.uid(), type: 'measurements', targetDate,
+            youGuess, himGuess,
+            actual: null, winner: null, resolved: false, resolvedDate: null
+        });
+        this.save();
+        this.closeAllModals();
+        this.toast('Bet placed! Good luck!');
+        this.render();
+    }
+
+    resolvebet(betId, type) {
+        const bet = this.data.bets.find(b => b.id === betId);
+        if (!bet) return;
+
+        if (type === 'weight') {
+            const actualEl = document.getElementById('resolveWeight');
+            const actual = parseFloat(actualEl.value);
+            if (isNaN(actual) || actual <= 0) { this.toast('Please enter a valid weight'); return; }
+
+            const youDiff = Math.abs(actual - bet.youGuess);
+            const himDiff = Math.abs(actual - bet.himGuess);
+            let winner;
+            if (youDiff < himDiff)      winner = 'you';
+            else if (himDiff < youDiff) winner = 'him';
+            else                        winner = 'tie';
+
+            bet.actual = actual;
+            bet.winner = winner;
+            bet.resolved = true;
+            bet.resolvedDate = this.today();
+        } else {
+            const fields = ['chest','waist','hips','thigh','arm'];
+            const actual = {};
+            fields.forEach(f => {
+                const el = document.getElementById(`resolveM_${f}`);
+                actual[f] = el && el.value !== '' ? parseFloat(el.value) : null;
+            });
+
+            // Compute total absolute error for guessed fields
+            let youTotal = 0, himTotal = 0, count = 0;
+            fields.forEach(f => {
+                if (actual[f] == null) return;
+                if (bet.youGuess[f] != null) { youTotal += Math.abs(actual[f] - bet.youGuess[f]); count++; }
+                if (bet.himGuess[f] != null) { himTotal += Math.abs(actual[f] - bet.himGuess[f]); count++; }
+            });
+
+            let winner;
+            if (count === 0) { this.toast('Please enter at least one actual measurement'); return; }
+            if (youTotal < himTotal)      winner = 'you';
+            else if (himTotal < youTotal) winner = 'him';
+            else                          winner = 'tie';
+
+            bet.actual = actual;
+            bet.winner = winner;
+            bet.resolved = true;
+            bet.resolvedDate = this.today();
+        }
+
+        this.save();
+        this.closeAllModals();
+
+        const name = bet.winner === 'you' ? this.data.settings.yourName
+                   : bet.winner === 'him' ? this.data.settings.husbandName
+                   : null;
+        if (name) this.toast(`${name} wins this bet!`);
+        else      this.toast("It's a tie!");
+        this.render();
+    }
+
+    deleteBet(id) {
+        this.data.bets = this.data.bets.filter(b => b.id !== id);
+        this.save();
+        this.render();
+    }
+
+    deleteWeight(id) {
+        this.data.weights = this.data.weights.filter(w => w.id !== id);
+        this.save();
+        this.render();
+    }
+
+    deleteMeasurement(id) {
+        this.data.measurements = this.data.measurements.filter(m => m.id !== id);
+        this.save();
+        this.render();
+    }
+
+    // =========================================================
+    //  SETTINGS
+    // =========================================================
+    setupSettings() {
+        document.getElementById('saveSettingsBtn').addEventListener('click', () => this.saveSettings());
+        document.getElementById('clearDataBtn').addEventListener('click', () => {
+            if (confirm('Delete ALL data? This cannot be undone.')) {
+                this.data.weights = [];
+                this.data.measurements = [];
+                this.data.bets = [];
+                this.save();
+                this.toast('All data cleared.');
+                this.render();
+            }
+        });
+    }
+
+    saveSettings() {
+        const wu = document.querySelector('input[name="weightUnit"]:checked')?.value || 'lbs';
+        const mu = document.querySelector('input[name="measureUnit"]:checked')?.value || 'in';
+        const yourName     = document.getElementById('yourName').value.trim() || 'You';
+        const husbandName  = document.getElementById('husbandName').value.trim() || 'Him';
+        this.data.settings = { weightUnit: wu, measureUnit: mu, yourName, husbandName };
+        this.save();
+        this.applySettings();
+        this.toast('Settings saved!');
+        this.render();
+    }
+
+    applySettings() {
+        const { weightUnit, measureUnit, yourName, husbandName } = this.data.settings;
+
+        // Sync radio buttons
+        const wuRadio = document.querySelector(`input[name="weightUnit"][value="${weightUnit}"]`);
+        if (wuRadio) wuRadio.checked = true;
+        const muRadio = document.querySelector(`input[name="measureUnit"][value="${measureUnit}"]`);
+        if (muRadio) muRadio.checked = true;
+
+        // Sync text inputs
+        document.getElementById('yourName').value = yourName;
+        document.getElementById('husbandName').value = husbandName;
+
+        // Update unit labels
+        document.querySelectorAll('.unit-label').forEach(el => el.textContent = weightUnit);
+        document.querySelectorAll('.measure-unit-label').forEach(el => el.textContent = measureUnit);
+
+        // Update display names
+        document.querySelectorAll('#husbandNameDisplay').forEach(el => el.textContent = husbandName);
+    }
+
+    // =========================================================
+    //  RENDER
+    // =========================================================
+    render() {
+        this.applySettings();
+        this.renderScoreboard();
+        switch (this.activeTab) {
+            case 'overview':     this.renderOverview(); break;
+            case 'weight':       this.renderWeightTab(); break;
+            case 'measurements': this.renderMeasurementsTab(); break;
+            case 'bets':         this.renderBetsTab(); break;
+        }
+    }
+
+    renderScoreboard() {
+        const { yourName, husbandName } = this.data.settings;
+        const resolved = this.data.bets.filter(b => b.resolved);
+        const youWins = resolved.filter(b => b.winner === 'you').length;
+        const himWins = resolved.filter(b => b.winner === 'him').length;
+
+        document.getElementById('statYouWins').textContent = youWins;
+        document.getElementById('statHimWins').textContent = himWins;
+        document.getElementById('youWinsDisplay').textContent = youWins;
+        document.getElementById('himWinsDisplay').textContent = himWins;
+        document.getElementById('headerScore').textContent = `${yourName} ${youWins} – ${himWins} ${husbandName}`;
+    }
+
+    // -- OVERVIEW -------------------------------------------------------
+    renderOverview() {
+        this.renderStatCards();
+        this.renderOverviewWeightChart();
+        this.renderOverviewMeasurementsChart();
+        this.renderOverviewActiveBets();
+        this.renderOverviewBetHistory();
+    }
+
+    renderStatCards() {
+        const wu = this.wu();
+        const mu = this.mu();
+
+        // Current weight
+        const latestW = this.data.weights[this.data.weights.length - 1];
+        const prevW   = this.data.weights[this.data.weights.length - 2];
+        document.getElementById('statCurrentWeight').textContent = latestW ? `${latestW.value} ${wu}` : '—';
+        if (latestW && prevW) {
+            const diff = (latestW.value - prevW.value).toFixed(1);
+            const el = document.getElementById('statWeightDelta');
+            el.textContent = (diff > 0 ? '+' : '') + diff + ' ' + wu;
+            el.className = 'stat-delta ' + (diff > 0 ? 'up' : diff < 0 ? 'down' : '');
+        } else {
+            document.getElementById('statWeightDelta').textContent = '';
+        }
+
+        // Latest waist
+        const latestM = this.data.measurements[this.data.measurements.length - 1];
+        const prevM   = this.data.measurements[this.data.measurements.length - 2];
+        document.getElementById('statCurrentWaist').textContent = latestM?.waist != null ? `${latestM.waist} ${mu}` : '—';
+        if (latestM?.waist != null && prevM?.waist != null) {
+            const diff = (latestM.waist - prevM.waist).toFixed(1);
+            const el = document.getElementById('statWaistDelta');
+            el.textContent = (diff > 0 ? '+' : '') + diff + ' ' + mu;
+            el.className = 'stat-delta ' + (diff > 0 ? 'up' : diff < 0 ? 'down' : '');
+        } else {
+            document.getElementById('statWaistDelta').textContent = '';
+        }
+    }
+
+    renderOverviewWeightChart() {
+        const last30 = this.getWeightEntries(30);
+        const empty  = document.getElementById('overviewWeightEmpty');
+        if (last30.length === 0) {
+            empty.style.display = 'block';
+            this.destroyChart('overviewWeight');
+            return;
+        }
+        empty.style.display = 'none';
+        this.buildWeightChart('overviewWeightChart', 'overviewWeight', last30);
+    }
+
+    renderOverviewMeasurementsChart() {
+        const entries = this.data.measurements;
+        const empty = document.getElementById('overviewMeasurementsEmpty');
+        if (entries.length === 0) {
+            empty.style.display = 'block';
+            this.destroyChart('overviewMeasurements');
+            return;
+        }
+        empty.style.display = 'none';
+        this.buildMeasurementsChart('overviewMeasurementsChart', 'overviewMeasurements', entries, ['waist','hips']);
+    }
+
+    renderOverviewActiveBets() {
+        const active = this.data.bets.filter(b => !b.resolved);
+        const container = document.getElementById('overviewActiveBets');
+        if (active.length === 0) {
+            container.innerHTML = '<p class="empty-msg">No active bets. Place one!</p>';
+            return;
+        }
+        container.innerHTML = active.slice(-4).reverse().map(b => this.betCardHTML(b)).join('');
+        this.attachBetCardListeners(container);
+    }
+
+    renderOverviewBetHistory() {
+        const resolved = this.data.bets.filter(b => b.resolved).slice(-4).reverse();
+        const container = document.getElementById('overviewBetHistory');
+        if (resolved.length === 0) {
+            container.innerHTML = '<p class="empty-msg">No resolved bets yet.</p>';
+            return;
+        }
+        container.innerHTML = resolved.map(b => this.betCardHTML(b)).join('');
+        this.attachBetCardListeners(container);
+    }
+
+    // -- WEIGHT TAB -------------------------------------------------------
+    renderWeightTab() {
+        this.renderWeightChart(parseInt(document.getElementById('weightChartRange').value) || 30);
+        this.renderWeightTable();
+    }
+
+    renderWeightChart(days) {
+        const entries = this.getWeightEntries(days);
+        const empty   = document.getElementById('weightChartEmpty');
+        if (entries.length === 0) {
+            empty.style.display = 'block';
+            document.getElementById('weightChart').style.display = 'none';
+            this.destroyChart('weightMain');
+            return;
+        }
+        empty.style.display = 'none';
+        document.getElementById('weightChart').style.display = 'block';
+        this.buildWeightChart('weightChart', 'weightMain', entries);
+    }
+
+    renderWeightTable() {
+        const tbody = document.getElementById('weightTableBody');
+        const entries = [...this.data.weights].reverse();
+        const wu = this.wu();
+
+        if (entries.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="empty-row">No entries yet</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = entries.map((w, i) => {
+            const prev = entries[i + 1];
+            let changeHTML = '<span class="change-none">—</span>';
+            if (prev) {
+                const diff = (w.value - prev.value).toFixed(1);
+                const cls  = diff > 0 ? 'change-up' : diff < 0 ? 'change-down' : 'change-none';
+                const sign = diff > 0 ? '+' : '';
+                changeHTML = `<span class="${cls}">${sign}${diff} ${wu}</span>`;
+            }
+            return `
+                <tr>
+                    <td>${this.formatDate(w.date)}</td>
+                    <td><strong>${w.value} ${wu}</strong>${w.note ? `<br><small style="color:var(--text-light)">${this.escape(w.note)}</small>` : ''}</td>
+                    <td>${changeHTML}</td>
+                    <td><button class="btn-delete" data-delete-weight="${w.id}" title="Delete">✕</button></td>
+                </tr>
+            `;
+        }).join('');
+
+        tbody.querySelectorAll('[data-delete-weight]').forEach(btn => {
+            btn.addEventListener('click', () => this.deleteWeight(btn.dataset.deleteWeight));
+        });
+    }
+
+    // -- MEASUREMENTS TAB -------------------------------------------------------
+    renderMeasurementsTab() {
+        const entries = this.data.measurements;
+        const empty = document.getElementById('measurementsChartEmpty');
+
+        if (entries.length === 0) {
+            empty.style.display = 'block';
+            document.getElementById('measurementsChart').style.display = 'none';
+            document.getElementById('measurementsLegend').innerHTML = '';
+            this.destroyChart('measurementsMain');
+        } else {
+            empty.style.display = 'none';
+            document.getElementById('measurementsChart').style.display = 'block';
+            this.buildMeasurementsChart('measurementsChart', 'measurementsMain', entries, ['chest','waist','hips','thigh','arm']);
+        }
+
+        this.renderMeasurementsTable();
+    }
+
+    renderMeasurementsTable() {
+        const tbody = document.getElementById('measurementsTableBody');
+        const entries = [...this.data.measurements].reverse();
+        const mu = this.mu();
+
+        if (entries.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="empty-row">No entries yet</td></tr>';
+            return;
+        }
+
+        const fmtM = (cur, prev, field) => {
+            if (cur[field] == null) return '—';
+            let str = `${cur[field]}`;
+            if (prev && prev[field] != null) {
+                const diff = (cur[field] - prev[field]).toFixed(1);
+                const cls  = diff > 0 ? 'change-up' : diff < 0 ? 'change-down' : 'change-none';
+                const sign = diff > 0 ? '+' : '';
+                str += ` <span class="${cls}">(${sign}${diff})</span>`;
+            }
+            return str;
+        };
+
+        tbody.innerHTML = entries.map((m, i) => {
+            const prev = entries[i + 1];
+            return `
+                <tr>
+                    <td>${this.formatDate(m.date)}</td>
+                    <td>${fmtM(m, prev, 'chest')}</td>
+                    <td>${fmtM(m, prev, 'waist')}</td>
+                    <td>${fmtM(m, prev, 'hips')}</td>
+                    <td>${fmtM(m, prev, 'thigh')}</td>
+                    <td>${fmtM(m, prev, 'arm')}</td>
+                    <td><button class="btn-delete" data-delete-measure="${m.id}" title="Delete">✕</button></td>
+                </tr>
+            `;
+        }).join('');
+
+        tbody.querySelectorAll('[data-delete-measure]').forEach(btn => {
+            btn.addEventListener('click', () => this.deleteMeasurement(btn.dataset.deleteMeasure));
+        });
+    }
+
+    // -- BETS TAB -------------------------------------------------------
+    renderBetsTab() {
+        const active   = this.data.bets.filter(b => !b.resolved).reverse();
+        const resolved = this.data.bets.filter(b => b.resolved).reverse();
+
+        const activeEl = document.getElementById('activeBetsList');
+        if (active.length === 0) {
+            activeEl.innerHTML = '<p class="empty-msg">No active bets. Place a new one!</p>';
+        } else {
+            activeEl.innerHTML = active.map(b => this.betCardHTML(b)).join('');
+            this.attachBetCardListeners(activeEl);
+        }
+
+        const historyEl = document.getElementById('betHistoryList');
+        if (resolved.length === 0) {
+            historyEl.innerHTML = '<p class="empty-msg">No resolved bets yet.</p>';
+        } else {
+            historyEl.innerHTML = resolved.map(b => this.betCardHTML(b)).join('');
+            this.attachBetCardListeners(historyEl);
+        }
+    }
+
+    // =========================================================
+    //  BET CARD HTML
+    // =========================================================
+    betCardHTML(bet) {
+        const { yourName, husbandName } = this.data.settings;
+        const u = bet.type === 'weight' ? this.wu() : this.mu();
+        const typeLabel = bet.type === 'weight' ? '⚖️ Weight' : '📏 Measurements';
+
+        let cardClass = 'bet-card';
+        if (!bet.resolved) cardClass += ' bet-card-active';
+        else if (bet.winner === 'you') cardClass += ' bet-card-won-you';
+        else if (bet.winner === 'him') cardClass += ' bet-card-won-him';
+        else cardClass += ' bet-card-tie';
+
+        let guessesHTML = '';
+        if (bet.type === 'weight') {
+            guessesHTML = `
+                <div class="bet-guesses-row">
+                    <div class="bet-guess">
+                        <span class="bet-guess-label">${yourName}</span>
+                        <span class="bet-guess-val you-val">${bet.youGuess} ${u}</span>
+                    </div>
+                    <span class="bet-vs">VS</span>
+                    <div class="bet-guess">
+                        <span class="bet-guess-label">${husbandName}</span>
+                        <span class="bet-guess-val him-val">${bet.himGuess} ${u}</span>
+                    </div>
+                    ${bet.resolved ? `
+                    <span class="bet-vs">→</span>
+                    <div class="bet-guess">
+                        <span class="bet-guess-label">Actual</span>
+                        <span class="bet-guess-val actual-val">${bet.actual} ${u}</span>
+                    </div>` : ''}
+                </div>
+            `;
+        } else {
+            const fields = ['chest','waist','hips','thigh','arm'];
+            const labels = { chest:'Chest', waist:'Waist', hips:'Hips', thigh:'Thigh', arm:'Bicep' };
+            const guessedFields = fields.filter(f => bet.youGuess[f] != null || bet.himGuess[f] != null);
+            const summary = guessedFields.map(f => `
+                <span class="bet-guess" style="font-size:0.8rem">
+                    <span class="bet-guess-label">${labels[f]}</span>
+                    <span style="display:flex;gap:0.4rem;align-items:center">
+                        <span style="color:var(--you);font-weight:700">${bet.youGuess[f] ?? '—'}</span>
+                        <span style="color:var(--text-light);font-size:0.7rem">vs</span>
+                        <span style="color:var(--him);font-weight:700">${bet.himGuess[f] ?? '—'}</span>
+                        ${bet.resolved && bet.actual?.[f] != null ? `<span style="color:var(--text-muted);font-size:0.7rem">→${bet.actual[f]}</span>` : ''}
+                    </span>
+                </span>
+            `).join('');
+            guessesHTML = `<div style="display:flex;flex-wrap:wrap;gap:0.75rem;margin-top:0.25rem">${summary}</div>`;
+        }
+
+        let winnerHTML = '';
+        if (bet.resolved) {
+            if (bet.winner === 'you')  winnerHTML = `<span class="bet-winner-badge winner-you">🏆 ${yourName} wins!</span>`;
+            else if (bet.winner === 'him') winnerHTML = `<span class="bet-winner-badge winner-him">🏆 ${husbandName} wins!</span>`;
+            else                       winnerHTML = `<span class="bet-winner-badge winner-tie">🤝 Tie!</span>`;
+        }
+
+        let actionsHTML = '';
+        if (!bet.resolved) {
+            actionsHTML = `
+                <div class="bet-actions">
+                    <button class="btn-resolve" data-resolve="${bet.id}">✓ Enter Result</button>
+                    <button class="btn-delete" data-delete-bet="${bet.id}" title="Delete bet">✕ Delete</button>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="${cardClass}">
+                <div class="bet-top">
+                    <span class="bet-type-badge">${typeLabel}</span>
+                    <span class="bet-date">Target: ${this.formatDate(bet.targetDate)}</span>
+                </div>
+                ${guessesHTML}
+                ${winnerHTML}
+                ${actionsHTML}
+            </div>
+        `;
+    }
+
+    attachBetCardListeners(container) {
+        container.querySelectorAll('[data-resolve]').forEach(btn => {
+            btn.addEventListener('click', () => this.openResolveModal(btn.dataset.resolve));
+        });
+        container.querySelectorAll('[data-delete-bet]').forEach(btn => {
+            btn.addEventListener('click', () => this.deleteBet(btn.dataset.deleteBet));
+        });
+    }
+
+    // =========================================================
+    //  CHARTS
+    // =========================================================
+    destroyChart(key) {
+        if (this.charts[key]) {
+            this.charts[key].destroy();
+            delete this.charts[key];
+        }
+    }
+
+    buildWeightChart(canvasId, key, entries) {
+        this.destroyChart(key);
+        const ctx = document.getElementById(canvasId)?.getContext('2d');
+        if (!ctx) return;
+
+        const labels = entries.map(e => this.shortDate(e.date));
+        const values = entries.map(e => e.value);
+        const wu     = this.wu();
+
+        // Trend line (simple linear regression)
+        const n = values.length;
+        const xMean = (n - 1) / 2;
+        const yMean = values.reduce((a, b) => a + b, 0) / n;
+        const slope = values.reduce((s, y, i) => s + (i - xMean) * (y - yMean), 0)
+                    / values.reduce((s, _, i) => s + (i - xMean) ** 2, 1e-9);
+        const intercept = yMean - slope * xMean;
+        const trendData = values.map((_, i) => +(intercept + slope * i).toFixed(2));
+
+        this.charts[key] = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [
+                    {
+                        label: `Weight (${wu})`,
+                        data: values,
+                        borderColor: '#e11d48',
+                        backgroundColor: 'rgba(225,29,72,0.08)',
+                        fill: true,
+                        tension: 0.35,
+                        pointBackgroundColor: '#e11d48',
+                        pointRadius: n <= 20 ? 4 : 2,
+                        pointHoverRadius: 6,
+                        borderWidth: 2.5,
+                    },
+                    {
+                        label: 'Trend',
+                        data: trendData,
+                        borderColor: 'rgba(225,29,72,0.3)',
+                        borderDash: [6,4],
+                        borderWidth: 1.5,
+                        pointRadius: 0,
+                        fill: false,
+                        tension: 0,
+                    }
+                ]
+            },
+            options: this.chartOptions(wu)
+        });
+    }
+
+    buildMeasurementsChart(canvasId, key, entries, fields) {
+        this.destroyChart(key);
+        const ctx = document.getElementById(canvasId)?.getContext('2d');
+        if (!ctx) return;
+
+        const labels = entries.map(e => this.shortDate(e.date));
+        const colors = {
+            chest: '#e11d48',
+            waist: '#7c3aed',
+            hips:  '#0ea5e9',
+            thigh: '#d97706',
+            arm:   '#059669',
+            neck:  '#64748b'
+        };
+        const fieldLabels = {
+            chest: 'Chest', waist: 'Waist', hips: 'Hips',
+            thigh: 'Thigh', arm: 'Bicep', neck: 'Neck'
+        };
+        const mu = this.mu();
+
+        const datasets = fields
+            .filter(f => entries.some(e => e[f] != null))
+            .map(f => ({
+                label: fieldLabels[f],
+                data: entries.map(e => e[f] ?? null),
+                borderColor: colors[f],
+                backgroundColor: colors[f] + '18',
+                fill: false,
+                tension: 0.35,
+                pointRadius: entries.length <= 12 ? 4 : 2,
+                pointHoverRadius: 6,
+                borderWidth: 2.5,
+                spanGaps: true,
+            }));
+
+        if (datasets.length === 0) return;
+
+        this.charts[key] = new Chart(ctx, {
+            type: 'line',
+            data: { labels, datasets },
+            options: this.chartOptions(mu)
+        });
+
+        // Build legend for measurements tab
+        const legendEl = document.getElementById('measurementsLegend');
+        if (legendEl) {
+            legendEl.innerHTML = datasets.map(d => `
+                <span class="legend-item">
+                    <span class="legend-dot" style="background:${d.borderColor}"></span>
+                    ${d.label}
+                </span>
+            `).join('');
+        }
+    }
+
+    chartOptions(unit) {
+        return {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#1c1917',
+                    titleColor: '#fafaf9',
+                    bodyColor: '#d4d4d4',
+                    padding: 10,
+                    cornerRadius: 8,
+                    callbacks: {
+                        label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y} ${unit}`
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#a8a29e', font: { size: 11 }, maxTicksLimit: 10 }
+                },
+                y: {
+                    grid: { color: '#f0e0e4' },
+                    ticks: { color: '#a8a29e', font: { size: 11 } }
+                }
+            }
+        };
+    }
+
+    // =========================================================
+    //  HELPERS
+    // =========================================================
+    uid() {
+        return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    }
+
+    today() {
+        return new Date().toISOString().slice(0, 10);
+    }
+
+    tomorrow() {
+        const d = new Date();
+        d.setDate(d.getDate() + 1);
+        return d.toISOString().slice(0, 10);
+    }
+
+    daysFromNow(n) {
+        const d = new Date();
+        d.setDate(d.getDate() + n);
+        return d.toISOString().slice(0, 10);
+    }
+
+    formatDate(dateStr) {
+        if (!dateStr) return '—';
+        const [y, m, d] = dateStr.split('-');
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        return `${months[parseInt(m) - 1]} ${parseInt(d)}, ${y}`;
+    }
+
+    shortDate(dateStr) {
+        if (!dateStr) return '';
+        const [, m, d] = dateStr.split('-');
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        return `${months[parseInt(m) - 1]} ${parseInt(d)}`;
+    }
+
+    getWeightEntries(days) {
+        if (!days) return this.data.weights;
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - days);
+        const cutStr = cutoff.toISOString().slice(0, 10);
+        return this.data.weights.filter(w => w.date >= cutStr);
+    }
+
+    wu() { return this.data.settings.weightUnit || 'lbs'; }
+    mu() { return this.data.settings.measureUnit || 'in'; }
+
+    numInput(id) {
+        const el = document.getElementById(id);
+        return el && el.value !== '' ? parseFloat(el.value) : null;
+    }
+
+    escape(str) {
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    toast(msg) {
+        const el = document.getElementById('toast');
+        el.textContent = msg;
+        el.classList.add('show');
+        setTimeout(() => el.classList.remove('show'), 2800);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    window.app = new TrackerApp();
+});
+
+</script>
+</body>
+</html>
