@@ -799,6 +799,7 @@ class TrackerApp {
     }
 
     buildWeightChart(canvasId, key, entries) {
+        try {
         this.destroyChart(key);
         const ctx = document.getElementById(canvasId)?.getContext('2d');
         if (!ctx) return;
@@ -847,9 +848,11 @@ class TrackerApp {
             },
             options: this.chartOptions(wu)
         });
+        } catch(e) { console.warn('Chart error:', e); }
     }
 
     buildMeasurementsChart(canvasId, key, entries, fields) {
+        try {
         this.destroyChart(key);
         const ctx = document.getElementById(canvasId)?.getContext('2d');
         if (!ctx) return;
@@ -902,6 +905,7 @@ class TrackerApp {
                 </span>
             `).join('');
         }
+        } catch(e) { console.warn('Chart error:', e); }
     }
 
     chartOptions(unit) {
