@@ -24,7 +24,6 @@
                 <button class="tab-btn active" data-tab="overview">Overview</button>
                 <button class="tab-btn" data-tab="weight">Weight</button>
                 <button class="tab-btn" data-tab="measurements">Measurements</button>
-                <button class="tab-btn" data-tab="body">3D Body</button>
                 <button class="tab-btn" data-tab="bets">Bets</button>
                 <button class="tab-btn" data-tab="settings">Settings</button>
             </nav>
@@ -213,39 +212,6 @@
                 </div>
             </section>
 
-            <!-- ===== BODY TAB ===== -->
-            <section class="tab-content" id="tab-body">
-                <div class="section-header">
-                    <div>
-                        <h2>3D Body Model</h2>
-                        <p class="section-sub">Watch your shape change over time — drag to rotate</p>
-                    </div>
-                    <button class="btn btn-primary" id="bodyPlayBtn" style="display:none">▶ Play History</button>
-                </div>
-
-                <div class="card body-card">
-                    <div id="bodyModelWrap" class="body-model-wrap">
-                        <div id="bodyModelEmpty" class="body-model-empty">
-                            <span style="font-size:3rem">📏</span>
-                            <p>Log your first measurements to see your 3D body model</p>
-                            <button class="btn btn-primary" onclick="window.app.switchTab('measurements')">Log Measurements</button>
-                        </div>
-                    </div>
-                    <div id="bodyTimeline" class="body-timeline" style="display:none">
-                        <div class="timeline-top">
-                            <span class="timeline-date" id="timelineDate">—</span>
-                            <span class="timeline-hint">Use the slider to travel through time</span>
-                        </div>
-                        <input type="range" class="timeline-slider" id="sessionSlider" min="0" max="0" value="0">
-                        <div class="timeline-pills" id="timelinePills"></div>
-                    </div>
-                </div>
-
-                <div class="card" id="bodyProgressCard" style="display:none">
-                    <div class="card-header"><h3>Progress: First vs Latest</h3></div>
-                    <div id="bodyProgressContent"></div>
-                </div>
-            </section>
 
             <!-- ===== BETS TAB ===== -->
             <section class="tab-content" id="tab-bets">
