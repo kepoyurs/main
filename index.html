@@ -1,144 +1,232 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Client Performance Dashboard</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Body Journey</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>📊 Client Performance Dashboard</h1>
-            <p class="subtitle">Upload and showcase your performance metrics</p>
-        </header>
+  <div class="app">
 
-        <div class="controls">
-            <button id="addScreenshotBtn" class="btn btn-primary">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 5v14M5 12h14"/>
-                </svg>
-                Upload Reports
-            </button>
-            <button id="settingsBtn" class="btn btn-secondary">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="3"/>
-                    <path d="M12 1v6m0 6v6M1 12h6m6 0h6"/>
-                </svg>
-                Settings
-            </button>
-            <div class="filter-group">
-                <label for="categoryFilter">Filter:</label>
-                <select id="categoryFilter" class="select">
-                    <option value="all">All Categories</option>
-                    <option value="social-media">Social Media</option>
-                    <option value="website">Website Analytics</option>
-                    <option value="seo">SEO Performance</option>
-                </select>
-            </div>
-            <button id="clearAllBtn" class="btn btn-secondary">Clear All</button>
+    <header class="app-header">
+      <h1>Body Journey</h1>
+      <p class="tagline">Track · Bet · Transform</p>
+      <div class="header-stats">
+        <span class="stat-chip" id="headerWeight">-- kg</span>
+        <span class="stat-chip" id="headerBetScore">You: 0 | Him: 0</span>
+      </div>
+    </header>
+
+    <nav class="tab-nav">
+      <button class="tab-btn active" data-tab="dashboard"><span class="tab-icon">🏠</span><span>Dashboard</span></button>
+      <button class="tab-btn" data-tab="weight"><span class="tab-icon">⚖️</span><span>Weight</span></button>
+      <button class="tab-btn" data-tab="measurements"><span class="tab-icon">📏</span><span>Measure</span></button>
+      <button class="tab-btn" data-tab="progress"><span class="tab-icon">📈</span><span>Progress</span></button>
+      <button class="tab-btn" data-tab="model"><span class="tab-icon">👤</span><span>3D Model</span></button>
+    </nav>
+
+    <main class="content">
+
+      <!-- DASHBOARD -->
+      <section id="tab-dashboard" class="tab-section active">
+        <div class="section-header">
+          <h2>Dashboard</h2>
+        </div>
+        <div class="stats-grid" id="dashboardStats"></div>
+        <div class="card" id="betLeaderboard"></div>
+        <div class="card">
+          <h3>Recent Activity</h3>
+          <div id="recentActivity"></div>
+        </div>
+      </section>
+
+      <!-- WEIGHT -->
+      <section id="tab-weight" class="tab-section">
+        <div class="section-header">
+          <h2>Weight Tracker</h2>
+          <p>Daily weigh-in with betting</p>
         </div>
 
-        <div id="uploadModal" class="modal">
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <h2>Upload Screenshot</h2>
-
-                <div id="dropZone" class="drop-zone">
-                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-                    </svg>
-                    <p>Drag & drop your screenshots or PDFs here</p>
-                    <p class="hint">You can upload multiple files at once</p>
-                    <p class="or">or</p>
-                    <button type="button" class="btn btn-outline" onclick="document.getElementById('fileInput').click()">
-                        Browse Files
-                    </button>
-                    <input type="file" id="fileInput" accept="image/*,application/pdf" multiple style="display: none;">
-                </div>
-
-                <div id="uploadForm" class="upload-form" style="display: none;">
-                    <div class="preview-container" id="previewContainer">
-                        <img id="imagePreview" src="" alt="Preview" style="display: none;">
-                        <canvas id="pdfPreview" style="display: none; max-width: 100%;"></canvas>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="screenshotCategory">Category *</label>
-                        <select id="screenshotCategory" class="select" required>
-                            <option value="">Select a category</option>
-                            <option value="social-media">Social Media</option>
-                            <option value="website">Website Analytics</option>
-                            <option value="seo">SEO Performance</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="screenshotTitle">Title</label>
-                        <input type="text" id="screenshotTitle" class="input" placeholder="e.g., Instagram Engagement - November 2024">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="screenshotDescription">Description</label>
-                        <textarea id="screenshotDescription" class="textarea" rows="3" placeholder="Add notes or context for this screenshot..."></textarea>
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="button" id="cancelUpload" class="btn btn-secondary">Cancel</button>
-                        <button type="button" id="saveScreenshot" class="btn btn-primary">Save Screenshot</button>
-                    </div>
-                </div>
+        <div class="card betting-card">
+          <h3>Tonight's Bet</h3>
+          <div id="weightBetStep1" class="bet-step">
+            <div class="bet-player">
+              <div class="player-avatar">👩</div>
+              <h4>Your Guess</h4>
+              <p>What do you think you'll weigh tomorrow morning?</p>
+              <div class="input-group">
+                <input type="number" id="weightBetMe" step="0.1" min="20" max="300" placeholder="75.5">
+                <span class="unit-label">kg</span>
+              </div>
+              <button class="btn btn-primary" onclick="lockWeightBet('me')">Lock In My Bet</button>
             </div>
+          </div>
+
+          <div id="weightBetStep2" class="bet-step hidden">
+            <div class="bet-player">
+              <div class="player-avatar">👨</div>
+              <h4>Husband's Guess</h4>
+              <p>Pass the device to your husband...</p>
+              <div class="input-group">
+                <input type="number" id="weightBetHim" step="0.1" min="20" max="300" placeholder="75.5">
+                <span class="unit-label">kg</span>
+              </div>
+              <button class="btn btn-primary" onclick="lockWeightBet('him')">Lock In His Bet</button>
+            </div>
+          </div>
+
+          <div id="weightBetConfirmed" class="bet-step hidden">
+            <div class="confirmed-msg">
+              <span class="confirmed-icon">✓</span>
+              <p>Both bets locked! Weigh yourself tomorrow morning to see who wins.</p>
+              <button class="btn btn-secondary" onclick="clearWeightBet()">Clear Bets</button>
+            </div>
+          </div>
         </div>
 
-        <div id="settingsModal" class="modal">
-            <div class="modal-content">
-                <span class="close-settings">&times;</span>
-                <h2>Settings</h2>
-
-                <div class="settings-section">
-                    <h3>Claude API Configuration</h3>
-                    <p class="settings-description">
-                        To automatically extract metrics from your screenshots, provide your Claude API key.
-                        Your key is stored locally and never sent anywhere except to Anthropic's API.
-                    </p>
-
-                    <div class="form-group">
-                        <label for="apiKey">Claude API Key</label>
-                        <input type="password" id="apiKey" class="input" placeholder="sk-ant-...">
-                        <p class="hint">Get your API key from <a href="https://console.anthropic.com/" target="_blank">console.anthropic.com</a></p>
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="button" id="saveSettings" class="btn btn-primary">Save Settings</button>
-                        <button type="button" id="testApiKey" class="btn btn-secondary">Test Connection</button>
-                    </div>
-
-                    <div id="apiStatus" class="api-status" style="display: none;"></div>
-                </div>
+        <div class="card">
+          <h3>Log This Morning's Weight</h3>
+          <div class="input-row">
+            <input type="date" id="weightDate">
+            <div class="input-group">
+              <input type="number" id="weightActual" step="0.1" min="20" max="300" placeholder="Actual weight">
+              <span class="unit-label">kg</span>
             </div>
+            <button class="btn btn-primary" onclick="logWeight()">Save</button>
+          </div>
+          <div id="weightResult"></div>
         </div>
 
-        <main id="dashboardContent">
-            <div id="emptyState" class="empty-state">
-                <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <rect x="3" y="3" width="18" height="18" rx="2"/>
-                    <circle cx="8.5" cy="8.5" r="1.5"/>
-                    <path d="M21 15l-5-5L5 21"/>
-                </svg>
-                <h2>No data yet</h2>
-                <p>Upload performance reports to extract and visualize metrics</p>
-                <button class="btn btn-primary" onclick="document.getElementById('addScreenshotBtn').click()">
-                    Upload Your First Report
-                </button>
+        <div class="card">
+          <h3>Weight History</h3>
+          <div id="weightHistory" class="table-container"></div>
+        </div>
+      </section>
+
+      <!-- MEASUREMENTS -->
+      <section id="tab-measurements" class="tab-section">
+        <div class="section-header">
+          <h2>Body Measurements</h2>
+          <p>Bi-weekly tracking in cm</p>
+        </div>
+
+        <div class="card betting-card">
+          <h3>Place Measurement Bets</h3>
+
+          <div id="measureBetStep1" class="bet-step">
+            <div class="bet-player">
+              <div class="player-avatar">👩</div>
+              <h4>Your Guesses</h4>
+              <div class="measurements-grid" id="betGridMe"></div>
+              <button class="btn btn-primary" onclick="lockMeasureBet('me')">Lock In My Bets</button>
             </div>
+          </div>
 
-            <div id="screenshotsGrid" class="screenshots-grid"></div>
-        </main>
-    </div>
+          <div id="measureBetStep2" class="bet-step hidden">
+            <div class="bet-player">
+              <div class="player-avatar">👨</div>
+              <h4>Husband's Guesses</h4>
+              <p>Pass the device to your husband...</p>
+              <div class="measurements-grid" id="betGridHim"></div>
+              <button class="btn btn-primary" onclick="lockMeasureBet('him')">Lock In His Bets</button>
+            </div>
+          </div>
 
-    <script src="app.js"></script>
+          <div id="measureBetConfirmed" class="bet-step hidden">
+            <div class="confirmed-msg">
+              <span class="confirmed-icon">✓</span>
+              <p>Bets locked! Log your measurements when you take them to see who wins.</p>
+              <button class="btn btn-secondary" onclick="clearMeasureBet()">Clear Bets</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Log Measurements</h3>
+          <div class="input-row">
+            <label style="font-weight:700;font-size:0.875rem">Date: <input type="date" id="measureDate"></label>
+          </div>
+          <div class="measurements-grid" id="measureInputGrid"></div>
+          <button class="btn btn-primary" onclick="logMeasurements()">Save Measurements</button>
+          <div id="measureResult"></div>
+        </div>
+
+        <div class="card">
+          <h3>Measurement History</h3>
+          <div id="measureHistory" class="table-container"></div>
+        </div>
+      </section>
+
+      <!-- PROGRESS -->
+      <section id="tab-progress" class="tab-section">
+        <div class="section-header">
+          <h2>Progress Charts</h2>
+        </div>
+        <div class="card">
+          <h3>Weight Over Time</h3>
+          <div class="chart-container">
+            <canvas id="weightChart"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Body Measurements Over Time</h3>
+          <div class="chart-container tall">
+            <canvas id="measureChart"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Total Progress Summary</h3>
+          <div id="progressSummary"></div>
+        </div>
+      </section>
+
+      <!-- 3D MODEL -->
+      <section id="tab-model" class="tab-section">
+        <div class="section-header">
+          <h2>3D Body Model</h2>
+          <p>Visualise your shape — drag to rotate, scroll to zoom</p>
+        </div>
+
+        <div class="card model-controls-card">
+          <div class="model-controls">
+            <div class="control-group">
+              <label>View date</label>
+              <select id="modelDate" onchange="updateModel()">
+                <option value="latest">Latest</option>
+              </select>
+            </div>
+            <div class="control-group">
+              <label>
+                <input type="checkbox" id="compareMode" onchange="toggleCompare()">
+                Compare with
+              </label>
+              <select id="compareDate" onchange="updateModel()" disabled>
+                <option value="">Select date…</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="model-layout">
+          <div class="model-canvas-wrap">
+            <canvas id="modelCanvas"></canvas>
+            <p class="model-hint">Drag to rotate · Scroll to zoom</p>
+          </div>
+          <div class="model-sidebar card">
+            <h3>Measurements</h3>
+            <div id="modelMeasurementsList"></div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
