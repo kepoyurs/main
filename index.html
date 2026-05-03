@@ -3,141 +3,519 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Client Performance Dashboard</title>
+    <title>Weight & Measurement Tracker</title>
     <link rel="stylesheet" href="styles.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>📊 Client Performance Dashboard</h1>
-            <p class="subtitle">Upload and showcase your performance metrics</p>
+    <div class="app">
+        <header class="app-header">
+            <div class="header-inner">
+                <div class="header-title">
+                    <h1>My Progress Tracker</h1>
+                    <p class="header-sub">Track weight, measurements & bets</p>
+                </div>
+                <div class="score-badge">
+                    <span class="score-label">Score</span>
+                    <span id="headerScore" class="score-value">You 0 – 0 Him</span>
+                </div>
+            </div>
+            <nav class="tab-nav">
+                <button class="tab-btn active" data-tab="overview">Overview</button>
+                <button class="tab-btn" data-tab="weight">Weight</button>
+                <button class="tab-btn" data-tab="measurements">Measurements</button>
+                <button class="tab-btn" data-tab="bets">Bets</button>
+                <button class="tab-btn" data-tab="settings">Settings</button>
+            </nav>
         </header>
 
-        <div class="controls">
-            <button id="addScreenshotBtn" class="btn btn-primary">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 5v14M5 12h14"/>
-                </svg>
-                Upload Reports
-            </button>
-            <button id="settingsBtn" class="btn btn-secondary">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="3"/>
-                    <path d="M12 1v6m0 6v6M1 12h6m6 0h6"/>
-                </svg>
-                Settings
-            </button>
-            <div class="filter-group">
-                <label for="categoryFilter">Filter:</label>
-                <select id="categoryFilter" class="select">
-                    <option value="all">All Categories</option>
-                    <option value="social-media">Social Media</option>
-                    <option value="website">Website Analytics</option>
-                    <option value="seo">SEO Performance</option>
-                </select>
-            </div>
-            <button id="clearAllBtn" class="btn btn-secondary">Clear All</button>
-        </div>
+        <main class="app-main">
 
-        <div id="uploadModal" class="modal">
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <h2>Upload Screenshot</h2>
-
-                <div id="dropZone" class="drop-zone">
-                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-                    </svg>
-                    <p>Drag & drop your screenshots or PDFs here</p>
-                    <p class="hint">You can upload multiple files at once</p>
-                    <p class="or">or</p>
-                    <button type="button" class="btn btn-outline" onclick="document.getElementById('fileInput').click()">
-                        Browse Files
-                    </button>
-                    <input type="file" id="fileInput" accept="image/*,application/pdf" multiple style="display: none;">
+            <!-- ===== OVERVIEW TAB ===== -->
+            <section class="tab-content active" id="tab-overview">
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-icon weight-icon">⚖️</div>
+                        <div class="stat-info">
+                            <span class="stat-label">Current Weight</span>
+                            <span class="stat-value" id="statCurrentWeight">—</span>
+                            <span class="stat-delta" id="statWeightDelta"></span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon measure-icon">📏</div>
+                        <div class="stat-info">
+                            <span class="stat-label">Last Waist</span>
+                            <span class="stat-value" id="statCurrentWaist">—</span>
+                            <span class="stat-delta" id="statWaistDelta"></span>
+                        </div>
+                    </div>
+                    <div class="stat-card you-card">
+                        <div class="stat-icon">🏆</div>
+                        <div class="stat-info">
+                            <span class="stat-label">Your Wins</span>
+                            <span class="stat-value" id="statYouWins">0</span>
+                            <span class="stat-delta">bets won</span>
+                        </div>
+                    </div>
+                    <div class="stat-card him-card">
+                        <div class="stat-icon">🎯</div>
+                        <div class="stat-info">
+                            <span class="stat-label">His Wins</span>
+                            <span class="stat-value" id="statHimWins">0</span>
+                            <span class="stat-delta">bets won</span>
+                        </div>
+                    </div>
                 </div>
 
-                <div id="uploadForm" class="upload-form" style="display: none;">
-                    <div class="preview-container" id="previewContainer">
-                        <img id="imagePreview" src="" alt="Preview" style="display: none;">
-                        <canvas id="pdfPreview" style="display: none; max-width: 100%;"></canvas>
+                <div class="overview-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Weight (last 30 days)</h2>
+                        </div>
+                        <div class="chart-wrap">
+                            <canvas id="overviewWeightChart"></canvas>
+                        </div>
+                        <p class="empty-chart" id="overviewWeightEmpty">No weight entries yet. Log your first weight!</p>
                     </div>
 
-                    <div class="form-group">
-                        <label for="screenshotCategory">Category *</label>
-                        <select id="screenshotCategory" class="select" required>
-                            <option value="">Select a category</option>
-                            <option value="social-media">Social Media</option>
-                            <option value="website">Website Analytics</option>
-                            <option value="seo">SEO Performance</option>
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Active Bets</h2>
+                            <button class="btn btn-sm btn-primary" id="overviewPlaceBetBtn">+ New Bet</button>
+                        </div>
+                        <div id="overviewActiveBets">
+                            <p class="empty-msg">No active bets. Place one!</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Measurements Progress</h2>
+                        </div>
+                        <div class="chart-wrap">
+                            <canvas id="overviewMeasurementsChart"></canvas>
+                        </div>
+                        <p class="empty-chart" id="overviewMeasurementsEmpty">No measurements yet.</p>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Bet History</h2>
+                        </div>
+                        <div id="overviewBetHistory">
+                            <p class="empty-msg">No resolved bets yet.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== WEIGHT TAB ===== -->
+            <section class="tab-content" id="tab-weight">
+                <div class="section-header">
+                    <div>
+                        <h2>Daily Weight</h2>
+                        <p class="section-sub">Log your morning weight every day</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-outline" id="placeBetWeightBtn">🎲 Bet Tomorrow</button>
+                        <button class="btn btn-primary" id="logWeightBtn">+ Log Weight</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Weight Over Time</h3>
+                        <select class="select-sm" id="weightChartRange">
+                            <option value="30">Last 30 days</option>
+                            <option value="90">Last 90 days</option>
+                            <option value="180">Last 6 months</option>
+                            <option value="0">All time</option>
                         </select>
                     </div>
-
-                    <div class="form-group">
-                        <label for="screenshotTitle">Title</label>
-                        <input type="text" id="screenshotTitle" class="input" placeholder="e.g., Instagram Engagement - November 2024">
+                    <div class="chart-wrap tall">
+                        <canvas id="weightChart"></canvas>
                     </div>
+                    <p class="empty-chart" id="weightChartEmpty">No entries yet. Start logging!</p>
+                </div>
 
-                    <div class="form-group">
-                        <label for="screenshotDescription">Description</label>
-                        <textarea id="screenshotDescription" class="textarea" rows="3" placeholder="Add notes or context for this screenshot..."></textarea>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Weight Log</h3>
                     </div>
-
-                    <div class="form-actions">
-                        <button type="button" id="cancelUpload" class="btn btn-secondary">Cancel</button>
-                        <button type="button" id="saveScreenshot" class="btn btn-primary">Save Screenshot</button>
+                    <div class="table-wrap">
+                        <table class="data-table" id="weightTable">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Weight</th>
+                                    <th>Change</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="weightTableBody">
+                                <tr><td colspan="4" class="empty-row">No entries yet</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-            </div>
-        </div>
+            </section>
 
-        <div id="settingsModal" class="modal">
-            <div class="modal-content">
-                <span class="close-settings">&times;</span>
-                <h2>Settings</h2>
-
-                <div class="settings-section">
-                    <h3>Claude API Configuration</h3>
-                    <p class="settings-description">
-                        To automatically extract metrics from your screenshots, provide your Claude API key.
-                        Your key is stored locally and never sent anywhere except to Anthropic's API.
-                    </p>
-
-                    <div class="form-group">
-                        <label for="apiKey">Claude API Key</label>
-                        <input type="password" id="apiKey" class="input" placeholder="sk-ant-...">
-                        <p class="hint">Get your API key from <a href="https://console.anthropic.com/" target="_blank">console.anthropic.com</a></p>
+            <!-- ===== MEASUREMENTS TAB ===== -->
+            <section class="tab-content" id="tab-measurements">
+                <div class="section-header">
+                    <div>
+                        <h2>Body Measurements</h2>
+                        <p class="section-sub">Log measurements every two weeks</p>
                     </div>
-
-                    <div class="form-actions">
-                        <button type="button" id="saveSettings" class="btn btn-primary">Save Settings</button>
-                        <button type="button" id="testApiKey" class="btn btn-secondary">Test Connection</button>
+                    <div class="header-actions">
+                        <button class="btn btn-outline" id="placeBetMeasurementsBtn">🎲 Bet Next Session</button>
+                        <button class="btn btn-primary" id="logMeasurementsBtn">+ Log Measurements</button>
                     </div>
-
-                    <div id="apiStatus" class="api-status" style="display: none;"></div>
                 </div>
-            </div>
-        </div>
 
-        <main id="dashboardContent">
-            <div id="emptyState" class="empty-state">
-                <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <rect x="3" y="3" width="18" height="18" rx="2"/>
-                    <circle cx="8.5" cy="8.5" r="1.5"/>
-                    <path d="M21 15l-5-5L5 21"/>
-                </svg>
-                <h2>No data yet</h2>
-                <p>Upload performance reports to extract and visualize metrics</p>
-                <button class="btn btn-primary" onclick="document.getElementById('addScreenshotBtn').click()">
-                    Upload Your First Report
-                </button>
-            </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Measurements Over Time</h3>
+                        <div class="legend" id="measurementsLegend"></div>
+                    </div>
+                    <div class="chart-wrap tall">
+                        <canvas id="measurementsChart"></canvas>
+                    </div>
+                    <p class="empty-chart" id="measurementsChartEmpty">No measurements yet. Start logging!</p>
+                </div>
 
-            <div id="screenshotsGrid" class="screenshots-grid"></div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Measurements Log</h3>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="data-table" id="measurementsTable">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Bicep</th>
+                                    <th>Bust</th>
+                                    <th>Waist</th>
+                                    <th>Hips</th>
+                                    <th>Butt</th>
+                                    <th>Thigh</th>
+                                    <th>Calf</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="measurementsTableBody">
+                                <tr><td colspan="9" class="empty-row">No entries yet</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- ===== BETS TAB ===== -->
+            <section class="tab-content" id="tab-bets">
+                <div class="section-header">
+                    <div>
+                        <h2>Bets</h2>
+                        <p class="section-sub">Guess tomorrow's weight or next measurement session</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-outline" id="newWeightBetBtn">⚖️ Weight Bet</button>
+                        <button class="btn btn-primary" id="newMeasurementsBetBtn">📏 Measurements Bet</button>
+                    </div>
+                </div>
+
+                <div class="scoreboard card">
+                    <h3>Scoreboard</h3>
+                    <div class="score-row">
+                        <div class="player-score you-score">
+                            <span class="player-name">You</span>
+                            <span class="player-wins" id="youWinsDisplay">0</span>
+                            <span class="player-label">wins</span>
+                        </div>
+                        <div class="vs-divider">VS</div>
+                        <div class="player-score him-score">
+                            <span class="player-name" id="husbandNameDisplay">Him</span>
+                            <span class="player-wins" id="himWinsDisplay">0</span>
+                            <span class="player-label">wins</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Active Bets</h3>
+                    </div>
+                    <div id="activeBetsList">
+                        <p class="empty-msg">No active bets. Place a new one!</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Bet History</h3>
+                    </div>
+                    <div id="betHistoryList">
+                        <p class="empty-msg">No resolved bets yet.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== SETTINGS TAB ===== -->
+            <section class="tab-content" id="tab-settings">
+                <div class="section-header">
+                    <div>
+                        <h2>Settings</h2>
+                    </div>
+                </div>
+                <div class="card settings-card">
+                    <h3>Preferences</h3>
+                    <div class="form-group">
+                        <label>Weight Unit</label>
+                        <div class="radio-group">
+                            <label class="radio-label"><input type="radio" name="weightUnit" value="lbs"> lbs</label>
+                            <label class="radio-label"><input type="radio" name="weightUnit" value="kg" checked> kg</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Measurement Unit</label>
+                        <div class="radio-group">
+                            <label class="radio-label"><input type="radio" name="measureUnit" value="in"> inches</label>
+                            <label class="radio-label"><input type="radio" name="measureUnit" value="cm" checked> cm</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="husbandName">Husband's Name</label>
+                        <input type="text" id="husbandName" class="input" placeholder="e.g. John" maxlength="20">
+                    </div>
+                    <div class="form-group">
+                        <label for="yourName">Your Name</label>
+                        <input type="text" id="yourName" class="input" placeholder="e.g. Jane" maxlength="20">
+                    </div>
+                    <button class="btn btn-primary" id="saveSettingsBtn">Save Settings</button>
+                    <div class="divider"></div>
+                    <h3>Data</h3>
+                    <p class="hint-text">All data is stored locally in your browser.</p>
+                    <button class="btn btn-danger" id="clearDataBtn">Clear All Data</button>
+                </div>
+            </section>
+
         </main>
     </div>
+
+    <!-- ===== MODAL: Log Weight ===== -->
+    <div class="modal" id="weightModal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-box">
+            <div class="modal-head">
+                <h2>Log Weight</h2>
+                <button class="modal-close">✕</button>
+            </div>
+            <form id="weightForm">
+                <div class="form-group">
+                    <label for="weightDate">Date</label>
+                    <input type="date" id="weightDate" class="input" required>
+                </div>
+                <div class="form-group">
+                    <label for="weightValue">Weight (<span class="unit-label">kg</span>)</label>
+                    <input type="number" id="weightValue" class="input" step="0.1" min="0" placeholder="e.g. 65.0" required>
+                </div>
+                <div class="form-group">
+                    <label for="weightNote">Note (optional)</label>
+                    <input type="text" id="weightNote" class="input" placeholder="e.g. after workout">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-ghost modal-cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== MODAL: Log Measurements ===== -->
+    <div class="modal" id="measurementsModal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-box modal-box-wide">
+            <div class="modal-head">
+                <h2>Log Measurements</h2>
+                <button class="modal-close">✕</button>
+            </div>
+            <form id="measurementsForm">
+                <div class="form-group">
+                    <label for="measureDate">Date</label>
+                    <input type="date" id="measureDate" class="input" required>
+                </div>
+                <div class="measurements-grid">
+                    <div class="form-group">
+                        <label for="measureBicep">Bicep (<span class="measure-unit-label">cm</span>)</label>
+                        <input type="number" id="measureBicep" class="input" step="0.1" min="0" placeholder="e.g. 30.0">
+                    </div>
+                    <div class="form-group">
+                        <label for="measureBust">Bust (<span class="measure-unit-label">cm</span>)</label>
+                        <input type="number" id="measureBust" class="input" step="0.1" min="0" placeholder="e.g. 92.0">
+                    </div>
+                    <div class="form-group">
+                        <label for="measureWaist">Waist (<span class="measure-unit-label">cm</span>)</label>
+                        <input type="number" id="measureWaist" class="input" step="0.1" min="0" placeholder="e.g. 72.0">
+                    </div>
+                    <div class="form-group">
+                        <label for="measureHips">Hips (<span class="measure-unit-label">cm</span>)</label>
+                        <input type="number" id="measureHips" class="input" step="0.1" min="0" placeholder="e.g. 96.0">
+                    </div>
+                    <div class="form-group">
+                        <label for="measureButt">Butt (<span class="measure-unit-label">cm</span>)</label>
+                        <input type="number" id="measureButt" class="input" step="0.1" min="0" placeholder="e.g. 98.0">
+                    </div>
+                    <div class="form-group">
+                        <label for="measureThigh">Thigh (<span class="measure-unit-label">cm</span>)</label>
+                        <input type="number" id="measureThigh" class="input" step="0.1" min="0" placeholder="e.g. 56.0">
+                    </div>
+                    <div class="form-group">
+                        <label for="measureCalf">Calf (<span class="measure-unit-label">cm</span>)</label>
+                        <input type="number" id="measureCalf" class="input" step="0.1" min="0" placeholder="e.g. 36.0">
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-ghost modal-cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== MODAL: Place Weight Bet ===== -->
+    <div class="modal" id="weightBetModal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-box">
+            <div class="modal-head">
+                <h2>🎲 Weight Bet</h2>
+                <button class="modal-close">✕</button>
+            </div>
+            <p class="modal-desc">Both guess what tomorrow's morning weight will be. Closest wins!</p>
+            <form id="weightBetForm">
+                <div class="form-group">
+                    <label for="betWeightDate">Target Date (weigh-in morning)</label>
+                    <input type="date" id="betWeightDate" class="input" required>
+                </div>
+                <div class="bet-guesses">
+                    <div class="form-group">
+                        <label for="betWeightYou">Your Guess (<span class="unit-label">kg</span>)</label>
+                        <input type="number" id="betWeightYou" class="input you-input" step="0.1" min="0" placeholder="e.g. 64.8" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="betWeightHim">His Guess (<span class="unit-label">kg</span>)</label>
+                        <input type="number" id="betWeightHim" class="input him-input" step="0.1" min="0" placeholder="e.g. 65.2" required>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-ghost modal-cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Place Bet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== MODAL: Place Measurements Bet ===== -->
+    <div class="modal" id="measurementsBetModal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-box modal-box-wide">
+            <div class="modal-head">
+                <h2>📏 Measurements Bet</h2>
+                <button class="modal-close">✕</button>
+            </div>
+            <p class="modal-desc">Both guess the measurements for the next session. Lowest total error wins!</p>
+            <form id="measurementsBetForm">
+                <div class="form-group">
+                    <label for="betMeasureDate">Target Date (measurement session)</label>
+                    <input type="date" id="betMeasureDate" class="input" required>
+                </div>
+                <div class="bet-columns">
+                    <div class="bet-column">
+                        <h4 class="you-heading">Your Guesses</h4>
+                        <div class="form-group">
+                            <label>Bicep (<span class="measure-unit-label">cm</span>)</label>
+                            <input type="number" class="input you-input" name="youBicep" step="0.1" min="0" placeholder="—">
+                        </div>
+                        <div class="form-group">
+                            <label>Bust (<span class="measure-unit-label">cm</span>)</label>
+                            <input type="number" class="input you-input" name="youBust" step="0.1" min="0" placeholder="—">
+                        </div>
+                        <div class="form-group">
+                            <label>Waist (<span class="measure-unit-label">cm</span>)</label>
+                            <input type="number" class="input you-input" name="youWaist" step="0.1" min="0" placeholder="—">
+                        </div>
+                        <div class="form-group">
+                            <label>Hips (<span class="measure-unit-label">cm</span>)</label>
+                            <input type="number" class="input you-input" name="youHips" step="0.1" min="0" placeholder="—">
+                        </div>
+                        <div class="form-group">
+                            <label>Butt (<span class="measure-unit-label">cm</span>)</label>
+                            <input type="number" class="input you-input" name="youButt" step="0.1" min="0" placeholder="—">
+                        </div>
+                        <div class="form-group">
+                            <label>Thigh (<span class="measure-unit-label">cm</span>)</label>
+                            <input type="number" class="input you-input" name="youThigh" step="0.1" min="0" placeholder="—">
+                        </div>
+                        <div class="form-group">
+                            <label>Calf (<span class="measure-unit-label">cm</span>)</label>
+                            <input type="number" class="input you-input" name="youCalf" step="0.1" min="0" placeholder="—">
+                        </div>
+                    </div>
+                    <div class="bet-column">
+                        <h4 class="him-heading">His Guesses</h4>
+                        <div class="form-group">
+                            <label>Bicep (<span class="measure-unit-label">cm</span>)</label>
+                            <input type="number" class="input him-input" name="himBicep" step="0.1" min="0" placeholder="—">
+                        </div>
+                        <div class="form-group">
+                            <label>Bust (<span class="measure-unit-label">cm</span>)</label>
+                            <input type="number" class="input him-input" name="himBust" step="0.1" min="0" placeholder="—">
+                        </div>
+                        <div class="form-group">
+                            <label>Waist (<span class="measure-unit-label">cm</span>)</label>
+                            <input type="number" class="input him-input" name="himWaist" step="0.1" min="0" placeholder="—">
+                        </div>
+                        <div class="form-group">
+                            <label>Hips (<span class="measure-unit-label">cm</span>)</label>
+                            <input type="number" class="input him-input" name="himHips" step="0.1" min="0" placeholder="—">
+                        </div>
+                        <div class="form-group">
+                            <label>Butt (<span class="measure-unit-label">cm</span>)</label>
+                            <input type="number" class="input him-input" name="himButt" step="0.1" min="0" placeholder="—">
+                        </div>
+                        <div class="form-group">
+                            <label>Thigh (<span class="measure-unit-label">cm</span>)</label>
+                            <input type="number" class="input him-input" name="himThigh" step="0.1" min="0" placeholder="—">
+                        </div>
+                        <div class="form-group">
+                            <label>Calf (<span class="measure-unit-label">cm</span>)</label>
+                            <input type="number" class="input him-input" name="himCalf" step="0.1" min="0" placeholder="—">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-ghost modal-cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Place Bet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== MODAL: Resolve Bet ===== -->
+    <div class="modal" id="resolveModal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-box modal-box-wide">
+            <div class="modal-head">
+                <h2 id="resolveModalTitle">Resolve Bet</h2>
+                <button class="modal-close">✕</button>
+            </div>
+            <div id="resolveModalContent"></div>
+        </div>
+    </div>
+
+    <!-- ===== TOAST ===== -->
+    <div class="toast" id="toast"></div>
 
     <script src="app.js"></script>
 </body>
